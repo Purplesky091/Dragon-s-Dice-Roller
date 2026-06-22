@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-var diceRegex = regexp.MustCompile(`^(\d+)d(\d+)$`)
+var diceRegex = regexp.MustCompile(`^(\d+)?d(\d+)$`)
 
 type Dice struct {
 	count int
@@ -22,8 +22,6 @@ func (dice Dice) String() string {
 
 func (dice Dice) Roll() int {
 	roll := randRange(1, dice.faces)
-	fmt.Printf("Rolled a %d\n", roll)
-	fmt.Printf("Multiplying %d with the count, %d\n", roll, dice.count)
 	return dice.count * roll
 }
 
@@ -31,16 +29,33 @@ func randRange(min int, max int) int {
 	return rand.IntN(max+1-min) + min
 }
 
+func (dice Dice) RollAdvantage() int {
+	result1 := dice.Roll()
+	result2 := dice.Roll()
+
+	fmt.Println("result1: ", result1)
+	fmt.Println("result2: ", result2)
+	return max(result1, result2)
+}
+
 func parseDice(dice string) (Dice, error) {
 	matches := diceRegex.FindStringSubmatch(dice)
+	var diceCount int
+	var faceCount int
 	if matches == nil {
 		return Dice{}, fmt.Errorf("%q is an invalid dice. Dice must match the format of <number>d<number>. <number> must be positive too.", dice)
 	}
 
-	diceCount, err := strconv.Atoi(matches[1])
-	if err != nil {
-		return Dice{}, fmt.Errorf("Invalid dice count: %w", err)
+	if matches[1] == "" {
+		diceCount = 1
+	} else {
+		var err error
+		diceCount, err = strconv.Atoi(matches[1])
+		if err != nil {
+			return Dice{}, fmt.Errorf("Invalid dice count: %w", err)
+		}
 	}
+
 	faceCount, err := strconv.Atoi(matches[2])
 	if err != nil {
 		return Dice{}, fmt.Errorf("Invalid face count: %w", err)
@@ -66,4 +81,8 @@ func main() {
 
 	result := dice.Roll()
 	fmt.Printf("You rolled %d\n", result)
+
+	fmt.Println("Rolling with advantage")
+	advantageResult := dice.RollAdvantage()
+	fmt.Println("You rolled: ", advantageResult)
 }
