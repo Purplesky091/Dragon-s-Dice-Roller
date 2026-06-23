@@ -44,4 +44,9 @@ func main() {
 	disadvantageResult, disRolls := dice.RollDisadvantage()
 	fmt.Println("Disadvantage rolls: ", disRolls)
 	fmt.Println("Disadvantage result: ", disadvantageResult)
+
+	fmt.Println("Rolling with triple disadvantage")
+	trplDisResult, trpldisRolls := dice.RollTripleAdvantage()
+	fmt.Println("Disadvantage rolls: ", trpldisRolls)
+	fmt.Println("Disadvantage result: ", trplDisResult)
 }

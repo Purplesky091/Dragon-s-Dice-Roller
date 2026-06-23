@@ -47,6 +47,23 @@ func (dice Dice) RollDisadvantage() (int, [2]int) {
 	return min, rolls
 }
 
+func (dice Dice) RollTripleDisadvantage() (int, [3]int) {
+	slog.Debug("Printing dice used", "dice", dice)
+	min := math.MaxInt
+	var rolls [3]int
+	for i := 0; i < 3; i++ {
+		rolls[i] = dice.Roll()
+		slog.Info("Disadvantage roll", "dice_roll", i+1, "roll", rolls[i])
+		if rolls[i] < min {
+			min = rolls[i]
+		}
+	}
+
+	slog.Info("Disadvantage Result", "min", min)
+
+	return min, rolls
+}
+
 func (dice Dice) RollAdvantage() (int, [2]int) {
 	max := 0
 	var rolls [2]int
