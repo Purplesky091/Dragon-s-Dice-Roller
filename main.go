@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-var opts = &slog.HandlerOptions{Level: slog.LevelInfo}
+var opts = &slog.HandlerOptions{Level: slog.LevelDebug}
 var logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
 
 func main() {
@@ -19,7 +19,7 @@ func main() {
 	if scanner.Scan() {
 		input = scanner.Text()
 	}
-	slog.Info("Dice rolled", "input", input)
+	slog.Debug("User input", "input", input)
 	dice, err := NewDice(input)
 
 	if err != nil {

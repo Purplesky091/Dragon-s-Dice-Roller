@@ -22,8 +22,13 @@ func (dice Dice) String() string {
 
 func (dice Dice) Roll() int {
 	slog.Debug("Roll", "dice", dice)
-	roll := randRange(1, dice.faces)
-	return dice.count * roll
+	var result int = 0
+	for i := 0; i < dice.count; i++ {
+		roll := randRange(1, dice.faces)
+		slog.Debug("Rolled value", "roll", roll)
+		result += roll
+	}
+	return result
 }
 
 func randRange(min int, max int) int {
