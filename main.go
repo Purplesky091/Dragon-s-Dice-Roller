@@ -33,9 +33,20 @@ func (dice Dice) RollAdvantage() int {
 	result1 := dice.Roll()
 	result2 := dice.Roll()
 
-	fmt.Println("result1: ", result1)
-	fmt.Println("result2: ", result2)
+	fmt.Println("result1:", result1)
+	fmt.Println("result2:", result2)
 	return max(result1, result2)
+}
+
+func (dice Dice) RollTripleAdvantage() int {
+	result1 := dice.Roll()
+	result2 := dice.Roll()
+	result3 := dice.Roll()
+
+	fmt.Println("result1:", result1)
+	fmt.Println("result2:", result2)
+	fmt.Println("result3:", result3)
+	return max(result1, result2, result3)
 }
 
 func parseDice(dice string) (Dice, error) {
@@ -85,4 +96,8 @@ func main() {
 	fmt.Println("Rolling with advantage")
 	advantageResult := dice.RollAdvantage()
 	fmt.Println("You rolled: ", advantageResult)
+
+	fmt.Println("Rolling with triple advantage")
+	tripleAdvantageRoll := dice.RollTripleAdvantage()
+	fmt.Println("You rolled: ", tripleAdvantageRoll)
 }
