@@ -44,15 +44,20 @@ func (dice Dice) RollAdvantage() (int, [2]int) {
 	return max, rolls
 }
 
-func (dice Dice) RollTripleAdvantage() int {
-	result1 := dice.Roll()
-	result2 := dice.Roll()
-	result3 := dice.Roll()
+func (dice Dice) RollTripleAdvantage() (int, [3]int) {
+	max := 0
+	var rolls [3]int
+	for i := 0; i < 3; i++ {
+		rolls[i] = dice.Roll()
+		slog.Info("Triple Advantage roll", "dice_roll", i+1, "roll", rolls[i])
+		if rolls[i] > max {
+			max = rolls[i]
+		}
+	}
 
-	fmt.Println("result1:", result1)
-	fmt.Println("result2:", result2)
-	fmt.Println("result3:", result3)
-	return max(result1, result2, result3)
+	slog.Info("Triple Advantage Result", "max", max)
+
+	return max, rolls
 }
 
 func NewDice(dice string) (Dice, error) {
