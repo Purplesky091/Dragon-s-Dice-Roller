@@ -20,6 +20,7 @@ func (dice Dice) String() string {
 }
 
 func (dice Dice) Roll() int {
+	slog.Debug("Roll", "dice.faces", dice.faces, "dice.count", dice.count)
 	roll := randRange(1, dice.faces)
 	return dice.count * roll
 }
