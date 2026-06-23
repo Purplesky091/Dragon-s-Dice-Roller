@@ -29,8 +29,9 @@ func main() {
 	fmt.Printf("You rolled %d\n", result)
 
 	fmt.Println("Rolling with advantage")
-	advantageResult := dice.RollAdvantage()
-	fmt.Println("You rolled: ", advantageResult)
+	advantageResult, rolls := dice.RollAdvantage()
+	fmt.Println("Advantage rolls: ", rolls)
+	fmt.Println("Advantage result: ", advantageResult)
 
 	fmt.Println("Rolling with triple advantage")
 	tripleAdvantageRoll := dice.RollTripleAdvantage()

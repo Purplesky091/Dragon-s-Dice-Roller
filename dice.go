@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"math/rand/v2"
 	"regexp"
 	"strconv"
@@ -27,13 +28,20 @@ func randRange(min int, max int) int {
 	return rand.IntN(max+1-min) + min
 }
 
-func (dice Dice) RollAdvantage() int {
-	result1 := dice.Roll()
-	result2 := dice.Roll()
+func (dice Dice) RollAdvantage() (int, [2]int) {
+	max := 0
+	var rolls [2]int
+	for i := 0; i < 2; i++ {
+		rolls[i] = dice.Roll()
+		slog.Info("Advantage roll", "dice_roll", i+1, "roll", rolls[i])
+		if rolls[i] > max {
+			max = rolls[i]
+		}
+	}
 
-	fmt.Println("result1:", result1)
-	fmt.Println("result2:", result2)
-	return max(result1, result2)
+	slog.Info("Advantage Result", "max", max)
+
+	return max, rolls
 }
 
 func (dice Dice) RollTripleAdvantage() int {
