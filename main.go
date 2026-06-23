@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log/slog"
 	"math/rand/v2"
 	"os"
 	"regexp"
@@ -76,17 +77,20 @@ func parseDice(dice string) (Dice, error) {
 }
 
 func main() {
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+
 	scanner := bufio.NewScanner(os.Stdin)
 	var input string
 	fmt.Print("Enter dice you wish to roll (format: <num>d<num>): ")
 	if scanner.Scan() {
 		input = scanner.Text()
 	}
-	fmt.Printf("Dice rolled: %s\n", input)
+	slog.Info("Dice rolled", "input", input)
 	dice, err := parseDice(input)
 
 	if err != nil {
-		fmt.Println(err)
+		slog.Error("Error parsing dice", "error", err)
 		os.Exit(1)
 	}
 
