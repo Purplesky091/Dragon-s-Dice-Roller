@@ -50,7 +50,7 @@ func (dice Dice) RollTripleAdvantage() int {
 	return max(result1, result2, result3)
 }
 
-func parseDice(dice string) (Dice, error) {
+func NewDice(dice string) (Dice, error) {
 	matches := diceRegex.FindStringSubmatch(dice)
 	var diceCount int
 	var faceCount int
@@ -87,7 +87,7 @@ func main() {
 		input = scanner.Text()
 	}
 	slog.Info("Dice rolled", "input", input)
-	dice, err := parseDice(input)
+	dice, err := NewDice(input)
 
 	if err != nil {
 		slog.Error("Error parsing dice", "error", err)
