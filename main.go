@@ -7,8 +7,10 @@ import (
 	"os"
 )
 
+var opts = &slog.HandlerOptions{Level: slog.LevelInfo}
+var logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
+
 func main() {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
 	scanner := bufio.NewScanner(os.Stdin)
@@ -37,4 +39,9 @@ func main() {
 	tripleAdvantageRoll, tripleRolls := dice.RollTripleAdvantage()
 	fmt.Println("Triple Advantage rolls: ", tripleRolls)
 	fmt.Println("Triple Advantage result: ", tripleAdvantageRoll)
+
+	fmt.Println("Rolling with disadvantage")
+	disadvantageResult, disRolls := dice.RollDisadvantage()
+	fmt.Println("Disadvantage rolls: ", disRolls)
+	fmt.Println("Disadvantage result: ", disadvantageResult)
 }

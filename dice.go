@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log/slog"
+	"math"
 	"math/rand/v2"
 	"regexp"
 	"strconv"
@@ -16,17 +17,34 @@ type Dice struct {
 }
 
 func (dice Dice) String() string {
-	return fmt.Sprintf("{count: %d, faces: %d}", dice.count, dice.faces)
+	return fmt.Sprintf("%dd%d", dice.count, dice.faces)
 }
 
 func (dice Dice) Roll() int {
-	slog.Debug("Roll", "dice.faces", dice.faces, "dice.count", dice.count)
+	slog.Debug("Roll", "dice", dice)
 	roll := randRange(1, dice.faces)
 	return dice.count * roll
 }
 
 func randRange(min int, max int) int {
 	return rand.IntN(max+1-min) + min
+}
+
+func (dice Dice) RollDisadvantage() (int, [2]int) {
+	slog.Debug("Printing dice used", "dice", dice)
+	min := math.MaxInt
+	var rolls [2]int
+	for i := 0; i < 2; i++ {
+		rolls[i] = dice.Roll()
+		slog.Info("Disadvantage roll", "dice_roll", i+1, "roll", rolls[i])
+		if rolls[i] < min {
+			min = rolls[i]
+		}
+	}
+
+	slog.Info("Disadvantage Result", "min", min)
+
+	return min, rolls
 }
 
 func (dice Dice) RollAdvantage() (int, [2]int) {
