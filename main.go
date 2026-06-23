@@ -21,7 +21,7 @@ func main() {
 	dice, err := NewDice(input)
 
 	if err != nil {
-		slog.Error("Error parsing dice", "error", err)
+		fmt.Println("Error", err)
 		os.Exit(1)
 	}
 
