@@ -11,6 +11,7 @@ import (
 
 var diceRegex = regexp.MustCompile(`^(\d+)?d(\d+)$`)
 var diceCountCap = 1000
+var faceCap = 1000
 var diceLengthCap = 10
 
 type Dice struct {
@@ -132,6 +133,10 @@ func NewDice(dice string) (Dice, error) {
 	faceCount, err := strconv.Atoi(matches[2])
 	if err != nil {
 		return Dice{}, fmt.Errorf("Invalid face count: %w", err)
+	}
+
+	if faceCount > faceCap {
+		return Dice{}, fmt.Errorf("Too many faces. You may only have up to %d faces", faceCap)
 	}
 
 	return Dice{count: diceCount, faces: faceCount}, nil
