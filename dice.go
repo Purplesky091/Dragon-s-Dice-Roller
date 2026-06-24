@@ -10,6 +10,8 @@ import (
 )
 
 var diceRegex = regexp.MustCompile(`^(\d+)?d(\d+)$`)
+var diceCountCap = 1000
+var diceLengthCap = 10
 
 type Dice struct {
 	count int
@@ -102,6 +104,10 @@ func (dice Dice) RollTripleAdvantage() (int, [3]int) {
 }
 
 func NewDice(dice string) (Dice, error) {
+	if len(dice) > diceLengthCap {
+		return Dice{}, fmt.Errorf("Dice is too long. Dice can only be %d characters long", diceLengthCap)
+	}
+
 	matches := diceRegex.FindStringSubmatch(dice)
 	var diceCount int
 	var faceCount int
@@ -116,6 +122,10 @@ func NewDice(dice string) (Dice, error) {
 		diceCount, err = strconv.Atoi(matches[1])
 		if err != nil {
 			return Dice{}, fmt.Errorf("Invalid dice count: %w", err)
+		}
+
+		if diceCount > diceCountCap {
+			return Dice{}, fmt.Errorf("Dice count, %d, is too high. Dice count must be between 1 to %d", diceCount, diceCountCap)
 		}
 	}
 
