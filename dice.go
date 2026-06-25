@@ -14,6 +14,10 @@ var diceCountCap = 1000
 var faceCap = 1000
 var diceLengthCap = 10
 
+func randRange(min int, max int) int {
+	return rand.IntN(max+1-min) + min
+}
+
 type Dice struct {
 	count int
 	faces int
@@ -23,110 +27,121 @@ func (dice Dice) String() string {
 	return fmt.Sprintf("%dd%d", dice.count, dice.faces)
 }
 
-func (dice Dice) Roll() int {
+type DiceRoll struct {
+	result int
+	rolls  []int
+}
+
+func (diceRoll DiceRoll) String() string {
+	return fmt.Sprintf("result:%d\nrolls:%v", diceRoll.result, diceRoll.rolls)
+}
+
+func (dice Dice) Roll() DiceRoll {
 	slog.Debug("Roll", "dice", dice)
 	var result int = 0
+	rolls := make([]int, dice.count)
+
 	for i := 0; i < dice.count; i++ {
 		roll := randRange(1, dice.faces)
 		slog.Debug("Rolled value", "roll", roll)
+		rolls[i] = roll
 		result += roll
 	}
-	return result
+	return DiceRoll{result: result, rolls: rolls}
 }
 
-func randRange(min int, max int) int {
-	return rand.IntN(max+1-min) + min
+func (dice Dice) RollAdvantage() (DiceRoll, []DiceRoll) {
+	var maxDice DiceRoll = DiceRoll{result: 0, rolls: nil}
+	var diceRolls []DiceRoll = make([]DiceRoll, 2)
+
+	for i := 0; i < 2; i++ {
+		diceRolls[i] = dice.Roll()
+		if diceRolls[i].result > maxDice.result {
+			maxDice = diceRolls[i]
+		}
+	}
+
+	slog.Info("Advantage roll result", "maxDice", maxDice)
+
+	return maxDice, diceRolls
 }
 
-func (dice Dice) RollDisadvantage() (int, [2]int) {
+func (dice Dice) RollDisadvantage() (DiceRoll, []DiceRoll) {
 	slog.Debug("Printing dice used", "dice", dice)
-	min := math.MaxInt
-	var rolls [2]int
+	var minRoll DiceRoll = DiceRoll{result: math.MaxInt, rolls: nil}
+	var rolls []DiceRoll = make([]DiceRoll, 2)
+
 	for i := 0; i < 2; i++ {
 		rolls[i] = dice.Roll()
 		slog.Info("Disadvantage roll", "dice_roll", i+1, "roll", rolls[i])
-		if rolls[i] < min {
-			min = rolls[i]
+		if rolls[i].result < minRoll.result {
+			minRoll = rolls[i]
 		}
 	}
 
-	slog.Info("Disadvantage Result", "min", min)
+	slog.Info("Disadvantage roll result", "minRoll", minRoll)
 
-	return min, rolls
+	return minRoll, rolls
 }
 
-func (dice Dice) RollTripleDisadvantage() (int, [3]int) {
-	slog.Debug("Printing dice used", "dice", dice)
-	min := math.MaxInt
-	var rolls [3]int
-	for i := 0; i < 3; i++ {
-		rolls[i] = dice.Roll()
-		slog.Info("Disadvantage roll", "dice_roll", i+1, "roll", rolls[i])
-		if rolls[i] < min {
-			min = rolls[i]
-		}
-	}
+// func (dice Dice) RollTripleDisadvantage() (int, [3]int) {
+// 	slog.Debug("Printing dice used", "dice", dice)
+// 	min := math.MaxInt
+// 	var rolls [3]int
+// 	for i := 0; i < 3; i++ {
+// 		rolls[i] = dice.Roll()
+// 		slog.Info("Disadvantage roll", "dice_roll", i+1, "roll", rolls[i])
+// 		if rolls[i] < min {
+// 			min = rolls[i]
+// 		}
+// 	}
 
-	slog.Info("Disadvantage Result", "min", min)
+// 	slog.Info("Disadvantage Result", "min", min)
 
-	return min, rolls
-}
+// 	return min, rolls
+// }
 
-func (dice Dice) RollAdvantage() (int, [2]int) {
-	max := 0
-	var rolls [2]int
-	for i := 0; i < 2; i++ {
-		rolls[i] = dice.Roll()
-		slog.Info("Advantage roll", "dice_roll", i+1, "roll", rolls[i])
-		if rolls[i] > max {
-			max = rolls[i]
-		}
-	}
+// func (dice Dice) RollTripleAdvantage() (int, [3]int) {
+// 	max := 0
+// 	var rolls [3]int
+// 	for i := 0; i < 3; i++ {
+// 		rolls[i] = dice.Roll()
+// 		slog.Info("Triple Advantage roll", "dice_roll", i+1, "roll", rolls[i])
+// 		if rolls[i] > max {
+// 			max = rolls[i]
+// 		}
+// 	}
 
-	slog.Info("Advantage Result", "max", max)
+// 	slog.Info("Triple Advantage Result", "max", max)
 
-	return max, rolls
-}
-
-func (dice Dice) RollTripleAdvantage() (int, [3]int) {
-	max := 0
-	var rolls [3]int
-	for i := 0; i < 3; i++ {
-		rolls[i] = dice.Roll()
-		slog.Info("Triple Advantage roll", "dice_roll", i+1, "roll", rolls[i])
-		if rolls[i] > max {
-			max = rolls[i]
-		}
-	}
-
-	slog.Info("Triple Advantage Result", "max", max)
-
-	return max, rolls
-}
+// 	return max, rolls
+// }
 
 func NewDice(dice string) (Dice, error) {
 	if len(dice) > diceLengthCap {
-		return Dice{}, fmt.Errorf("Dice is too long. Dice can only be %d characters long", diceLengthCap)
+		return Dice{}, fmt.Errorf("Dice input is too long. It must be %d characters or less", diceLengthCap)
 	}
 
 	matches := diceRegex.FindStringSubmatch(dice)
-	var diceCount int
+	var diceCount int = 1 // assume default of 1 in case first parameter is not provided (since the number before d is optional and if left blank means 1)
 	var faceCount int
 	if matches == nil {
-		return Dice{}, fmt.Errorf("%q is an invalid dice. Dice must match the format of <number>d<number>. <number> must be positive too.", dice)
+		return Dice{}, fmt.Errorf("%q isn't a valid dice. Format is <number>d<number> (e.g. 2d6)", dice)
 	}
 
-	if matches[1] == "" {
-		diceCount = 1
-	} else {
+	if matches[1] != "" {
 		var err error
 		diceCount, err = strconv.Atoi(matches[1])
 		if err != nil {
 			return Dice{}, fmt.Errorf("Invalid dice count: %w", err)
 		}
 
+		if diceCount == 0 {
+			return Dice{}, fmt.Errorf("Number of dice must be greater than 0")
+		}
+
 		if diceCount > diceCountCap {
-			return Dice{}, fmt.Errorf("Dice count, %d, is too high. Dice count must be between 1 to %d", diceCount, diceCountCap)
+			return Dice{}, fmt.Errorf("The dice count %d in %q is too high. Max is %d", diceCount, dice, diceCountCap)
 		}
 	}
 
@@ -136,7 +151,7 @@ func NewDice(dice string) (Dice, error) {
 	}
 
 	if faceCount > faceCap {
-		return Dice{}, fmt.Errorf("Too many faces. You may only have up to %d faces", faceCap)
+		return Dice{}, fmt.Errorf("Can't roll a d%d. Max is d%d", faceCount, faceCap)
 	}
 
 	return Dice{count: diceCount, faces: faceCount}, nil

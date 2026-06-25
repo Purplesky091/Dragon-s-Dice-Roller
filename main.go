@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-var opts = &slog.HandlerOptions{Level: slog.LevelDebug}
+var opts = &slog.HandlerOptions{Level: slog.LevelInfo}
 var logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
 
 func main() {
@@ -27,26 +27,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	result := dice.Roll()
-	fmt.Printf("You rolled %d\n", result)
+	diceRoll := dice.Roll()
+	fmt.Println(diceRoll)
+	winningRoll, advRolls := dice.RollAdvantage()
 
-	fmt.Println("Rolling with advantage")
-	advantageResult, rolls := dice.RollAdvantage()
-	fmt.Println("Advantage rolls: ", rolls)
-	fmt.Println("Advantage result: ", advantageResult)
+	fmt.Println("Winning roll:", winningRoll.result)
+	for i := 0; i < len(advRolls); i++ {
+		fmt.Println(advRolls[i])
+	}
 
-	fmt.Println("Rolling with triple advantage")
-	tripleAdvantageRoll, tripleRolls := dice.RollTripleAdvantage()
-	fmt.Println("Triple Advantage rolls: ", tripleRolls)
-	fmt.Println("Triple Advantage result: ", tripleAdvantageRoll)
-
-	fmt.Println("Rolling with disadvantage")
-	disadvantageResult, disRolls := dice.RollDisadvantage()
-	fmt.Println("Disadvantage rolls: ", disRolls)
-	fmt.Println("Disadvantage result: ", disadvantageResult)
-
-	fmt.Println("Rolling with triple disadvantage")
-	trplDisResult, trpldisRolls := dice.RollTripleAdvantage()
-	fmt.Println("Disadvantage rolls: ", trpldisRolls)
-	fmt.Println("Disadvantage result: ", trplDisResult)
+	fmt.Println("Rolling disadvantage")
+	minRoll, disAdvRolls := dice.RollDisadvantage()
+	fmt.Println("Winning roll:", minRoll.result)
+	for i := 0; i < len(disAdvRolls); i++ {
+		fmt.Println(disAdvRolls[i])
+	}
 }
