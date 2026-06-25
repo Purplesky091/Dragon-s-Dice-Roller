@@ -9,10 +9,24 @@ import (
 
 var opts = &slog.HandlerOptions{Level: slog.LevelInfo}
 var logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
+var useDiscordBot = true
 
 func main() {
 	slog.SetDefault(logger)
+	if !useDiscordBot {
+		RunConsoleVersion()
+		return
+	}
 
+	token := os.Getenv("DISCORD_TOKEN")
+	if token == "" {
+		slog.Error("DISCORD_TOKEN env var not set.")
+		os.Exit(1)
+	}
+
+}
+
+func RunConsoleVersion() {
 	scanner := bufio.NewScanner(os.Stdin)
 	var input string
 	fmt.Print("Enter dice you wish to roll (format: <num>d<num>): ")
