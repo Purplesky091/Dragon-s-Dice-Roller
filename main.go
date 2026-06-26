@@ -15,18 +15,36 @@ var logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
 const useDiscordBot = true
 const MaxDiscordMsgLength = 2000
 
+var rollOptions = []*discordgo.ApplicationCommandOption{
+	{
+		Type:        discordgo.ApplicationCommandOptionString,
+		Name:        "dice",
+		Description: "Dice format (i.e. 2d6, d20, 4d4)",
+		Required:    true,
+	},
+	{
+		Type:        discordgo.ApplicationCommandOptionString,
+		Name:        "type",
+		Description: "What type of roll (advantage, disadvantage, normal). Defaults to normal",
+		Required:    false,
+		Choices: []*discordgo.ApplicationCommandOptionChoice{
+			{Name: "normal", Value: "normal"},
+			{Name: "advantage", Value: "advantage"},
+			{Name: "disadvantage", Value: "disadvantage"},
+		},
+	},
+}
+
 var commands = []*discordgo.ApplicationCommand{
 	{
 		Name:        "roll",
 		Description: "Roll dice in <number>d<number> format (ie 2d6)",
-		Options: []*discordgo.ApplicationCommandOption{
-			{
-				Type:        discordgo.ApplicationCommandOptionString,
-				Name:        "dice",
-				Description: "Dice format (i.e. 2d6, d20, 4d4)",
-				Required:    true,
-			},
-		},
+		Options:     rollOptions,
+	},
+	{
+		Name:        "dr",
+		Description: "alias for dice roll",
+		Options:     rollOptions,
 	},
 }
 
@@ -51,14 +69,30 @@ func handleRoll(session *discordgo.Session, interactionEvent *discordgo.Interact
 		respond(session, interactionEvent, fmt.Sprintf("Invalid dice: %s", err))
 		return
 	}
+	rollType := "normal"
+	if len(options) > 1 {
+		rollType = options[1].StringValue()
+	}
 
 	var msg string
-	roll := dice.Roll()
-	msg = fmt.Sprintf("**Rolling %s**\nRolls: %v\n**Sum: %d**", diceStr, roll.rolls, roll.result)
-	if len(msg) > MaxDiscordMsgLength {
-		slog.Info("Message exceeds discord's max message length. Removing rolls from result")
-		msg = fmt.Sprintf("**Rolling %s**\n**Sum: %d**", diceStr, roll.result)
+	switch rollType {
+	case "advantage":
+		result, rolls := dice.RollAdvantage()
+		msg = fmt.Sprintf("Rolling %s with advantage\n**Roll 1:**\n%s\n**Roll 2:**\n%s\n**Final Roll:**\n%s", diceStr, rolls[0], rolls[1], result)
+		break
+	case "disadvantage":
+		result, rolls := dice.RollDisadvantage()
+		msg = fmt.Sprintf("Rolling %s with disadvantage\n**Roll 1:**\n%s\n**Roll 2:**\n%s\n**Final Roll:**\n%s", diceStr, rolls[0], rolls[1], result)
+		break
+	default:
+		roll := dice.Roll()
+		msg = fmt.Sprintf("Rolling %s\nRolls: %v\nSum: %d", diceStr, roll.rolls, roll.result)
 	}
+
+	// if len(msg) > MaxDiscordMsgLength {
+	// 	slog.Info("Message exceeds discord's max message length. Removing rolls from result")
+	// 	msg = fmt.Sprintf("**Rolling %s**\n**Sum: %d**", diceStr, roll.result)
+	// }
 
 	respond(session, interactionEvent, msg)
 }
@@ -89,7 +123,7 @@ func main() {
 		}
 
 		switch interactionEvent.ApplicationCommandData().Name {
-		case "roll":
+		case "roll", "dr":
 			handleRoll(session, interactionEvent)
 		}
 	})
