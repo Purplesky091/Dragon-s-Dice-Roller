@@ -1,13 +1,62 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
+	"os/signal"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 var opts = &slog.HandlerOptions{Level: slog.LevelInfo}
 var logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
-var useDiscordBot = false
+
+const useDiscordBot = true
+
+var commands = []*discordgo.ApplicationCommand{
+	{
+		Name:        "roll",
+		Description: "Roll dice in <number>d<number> format (ie 2d6)",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "dice",
+				Description: "Dice format (i.e. 2d6, d20, 4d4)",
+				Required:    true,
+			},
+		},
+	},
+}
+
+func respond(session *discordgo.Session, interactionEvent *discordgo.InteractionCreate, content string) {
+	err := session.InteractionRespond(interactionEvent.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: content,
+		},
+	})
+	if err != nil {
+		slog.Error("Failed to respond to interaction", "error", err)
+	}
+}
+
+func handleRoll(session *discordgo.Session, interactionEvent *discordgo.InteractionCreate) {
+	options := interactionEvent.ApplicationCommandData().Options
+
+	diceStr := options[0].StringValue()
+	dice, err := NewDice(diceStr)
+	if err != nil {
+		respond(session, interactionEvent, fmt.Sprintf("Invalid dice: %s", err))
+		return
+	}
+
+	var msg string
+	roll := dice.Roll()
+	msg = fmt.Sprintf("**Rolling %s**\nRolls: %v\n**Sum: %d**", diceStr, roll.rolls, roll.result)
+
+	respond(session, interactionEvent, msg)
+}
 
 func main() {
 	slog.SetDefault(logger)
@@ -22,4 +71,52 @@ func main() {
 		slog.Error("DISCORD_TOKEN env var not set.")
 		os.Exit(1)
 	}
+
+	dg, err := discordgo.New("Bot " + token)
+	if err != nil {
+		slog.Error("Error creating Discord session", "error", err)
+		os.Exit(1)
+	}
+
+	dg.AddHandler(func(session *discordgo.Session, interactionEvent *discordgo.InteractionCreate) {
+		if interactionEvent.Type != discordgo.InteractionApplicationCommand {
+			return
+		}
+
+		switch interactionEvent.ApplicationCommandData().Name {
+		case "roll":
+			handleRoll(session, interactionEvent)
+		}
+	})
+
+	err = dg.Open()
+	if err != nil {
+		slog.Error("Error opening connection to Discord", "error", err)
+		os.Exit(1)
+	}
+	defer dg.Close()
+
+	registeredCommands := make([]*discordgo.ApplicationCommand, len(commands))
+	for index, cmd := range commands {
+		registered, err := dg.ApplicationCommandCreate(dg.State.User.ID, "", cmd)
+		if err != nil {
+			slog.Error("Could not register command", "name", cmd.Name)
+			os.Exit(1)
+		}
+		registeredCommands[index] = registered
+		slog.Info("Registered slash command", "name", cmd.Name)
+	}
+
+	slog.Info("Bot is running. Press ctrl + c to quit")
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+	<-stop
+
+	// Clean up slash commands on shutdown so they don't linger in Discord.
+	for _, cmd := range registeredCommands {
+		if err := dg.ApplicationCommandDelete(dg.State.User.ID, "", cmd.ID); err != nil {
+			slog.Warn("Could not delete command on shutdown", "name", cmd.Name, "error", err)
+		}
+	}
+	slog.Info("Bot shut down cleanly.")
 }
