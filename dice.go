@@ -33,7 +33,18 @@ type DiceRoll struct {
 }
 
 func (diceRoll DiceRoll) String() string {
-	return fmt.Sprintf("result:%d\nrolls:%v", diceRoll.result, diceRoll.rolls)
+	return fmt.Sprintf("rolls:%v\nsum:%d", diceRoll.rolls, diceRoll.result)
+}
+
+func (diceRoll DiceRoll) DiscordString() string {
+	result := ""
+	if len(diceRoll.rolls) <= MaxDisplayableRolls {
+		result = fmt.Sprintf("rolls:%v\nsum:%d", diceRoll.rolls, diceRoll.result)
+	} else {
+		result = fmt.Sprintf("sum:%d", diceRoll.result)
+	}
+
+	return result
 }
 
 func (dice Dice) Roll() DiceRoll {
