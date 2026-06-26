@@ -14,9 +14,9 @@ func (diceRoll DiceRoll) String() string {
 func (diceRoll DiceRoll) DiscordString() string {
 	result := ""
 	if len(diceRoll.rolls) <= MaxDisplayableRolls {
-		result = fmt.Sprintf("rolls:%v\nsum:%d", diceRoll.rolls, diceRoll.result)
+		result = fmt.Sprintf("rolls: %v\nsum: %d", diceRoll.rolls, diceRoll.result)
 	} else {
-		result = fmt.Sprintf("sum:%d", diceRoll.result)
+		result = fmt.Sprintf("sum: %d", diceRoll.result)
 	}
 
 	return result
