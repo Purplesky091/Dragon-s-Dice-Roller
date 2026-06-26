@@ -61,6 +61,8 @@ func respond(session *discordgo.Session, interactionEvent *discordgo.Interaction
 	}
 }
 
+// oooh amazing comment
+
 func createDiceRollMessage(dice Dice, diceRoll DiceRoll) string {
 	rollsStr := ""
 	if dice.count <= MaxDisplayableRolls {
