@@ -13,6 +13,7 @@ var opts = &slog.HandlerOptions{Level: slog.LevelInfo}
 var logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
 
 const useDiscordBot = true
+const MaxDiscordMsgLength = 2000
 
 var commands = []*discordgo.ApplicationCommand{
 	{
@@ -54,6 +55,10 @@ func handleRoll(session *discordgo.Session, interactionEvent *discordgo.Interact
 	var msg string
 	roll := dice.Roll()
 	msg = fmt.Sprintf("**Rolling %s**\nRolls: %v\n**Sum: %d**", diceStr, roll.rolls, roll.result)
+	if len(msg) > MaxDiscordMsgLength {
+		slog.Info("Message exceeds discord's max message length. Removing rolls from result")
+		msg = fmt.Sprintf("**Rolling %s**\n**Sum: %d**", diceStr, roll.result)
+	}
 
 	respond(session, interactionEvent, msg)
 }
