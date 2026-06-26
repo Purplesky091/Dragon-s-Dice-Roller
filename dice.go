@@ -36,6 +36,17 @@ func (diceRoll DiceRoll) String() string {
 	return fmt.Sprintf("rolls:%v\nsum:%d", diceRoll.rolls, diceRoll.result)
 }
 
+func (diceRoll DiceRoll) DiscordString() string {
+	result := ""
+	if len(diceRoll.rolls) <= MaxDisplayableRolls {
+		result = fmt.Sprintf("rolls:%v\nsum:%d", diceRoll.rolls, diceRoll.result)
+	} else {
+		result = fmt.Sprintf("sum:%d", diceRoll.result)
+	}
+
+	return result
+}
+
 func (dice Dice) Roll() DiceRoll {
 	slog.Debug("Roll", "dice", dice)
 	var result int = 0
