@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -14,7 +16,7 @@ var logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
 
 const useDiscordBot = true
 const MaxDiscordMsgLength = 2000
-const MaxDisplayableRolls = 200 // how big the dice count can be before I stop showing the rolls
+const MaxDisplayableRolls = 30 // how big the dice count can be before I stop showing the rolls
 
 var rollOptions = []*discordgo.ApplicationCommandOption{
 	{
@@ -61,12 +63,68 @@ func respond(session *discordgo.Session, interactionEvent *discordgo.Interaction
 	}
 }
 
-func createDiceRollMessage(dice Dice, diceRoll DiceRoll) string {
-	rollsStr := ""
-	if dice.count <= MaxDisplayableRolls {
-		rollsStr = fmt.Sprintf("Rolls: %v\n", diceRoll.rolls)
+func centerPad(s string, width int) string {
+	pad := width - len(s)
+	if pad <= 0 {
+		return s
 	}
-	return fmt.Sprintf("Rolling %s\n%sSum: %d", dice, rollsStr, diceRoll.result)
+	left := pad / 2
+	return strings.Repeat(" ", left) + s + strings.Repeat(" ", pad-left)
+}
+
+func displayDiceRoll(diceStr string, diceRoll DiceRoll) string {
+	sumStr := strconv.Itoa(diceRoll.result)
+
+	if len(diceRoll.rolls) > MaxDisplayableRolls {
+		return displaySingleCol(diceStr, sumStr)
+	}
+
+	return displayTwoCol(diceStr, sumStr, fmt.Sprintf("%v", diceRoll.rolls))
+}
+
+func displaySingleCol(diceStr string, sumStr string) string {
+	width := max(len(diceStr), len("sum"), len(sumStr))
+
+	top := "╔" + strings.Repeat("═", width+2) + "╗"
+	mid := "╠" + strings.Repeat("═", width+2) + "╢"
+	divider := "╟" + strings.Repeat("─", width+2) + "╢"
+	bottom := "╚" + strings.Repeat("═", width+2) + "╝"
+
+	return strings.Join([]string{
+		"```",
+		top,
+		fmt.Sprintf("║ %s ║", centerPad(diceStr, width)),
+		mid,
+		fmt.Sprintf("║ %s ║", centerPad("sum", width)),
+		divider,
+		fmt.Sprintf("║ %s ║", centerPad(sumStr, width)),
+		bottom,
+		"```",
+	}, "\n")
+}
+
+func displayTwoCol(diceStr, sumStr, rollsStr string) string {
+	w1 := max(len("rolls"), len(rollsStr))
+	w2 := max(len("sum"), len(sumStr))
+	innerWidth := w1 + w2 + 3
+	hw := max(len(diceStr), innerWidth)
+
+	top := "╔" + strings.Repeat("═", hw+2) + "╗"
+	mid := "╠" + strings.Repeat("═", w1+2) + "╤" + strings.Repeat("═", w2+2) + "╣"
+	div := "╟" + strings.Repeat("─", w1+2) + "┼" + strings.Repeat("─", w2+2) + "╢"
+	bot := "╚" + strings.Repeat("═", w1+2) + "╧" + strings.Repeat("═", w2+2) + "╝"
+
+	return strings.Join([]string{
+		"```",
+		top,
+		fmt.Sprintf("║ %s ║", centerPad(diceStr, hw)),
+		mid,
+		fmt.Sprintf("║ %s │ %-*s ║", centerPad("rolls", w1), w2, "sum"),
+		div,
+		fmt.Sprintf("║ %s │ %s ║", centerPad(rollsStr, w1), centerPad(sumStr, w2)),
+		bot,
+		"```",
+	}, "\n")
 }
 
 func handleRoll(session *discordgo.Session, interactionEvent *discordgo.InteractionCreate) {
@@ -93,7 +151,7 @@ func handleRoll(session *discordgo.Session, interactionEvent *discordgo.Interact
 		msg = fmt.Sprintf("Rolling %s with disadvantage\nRoll 1:\n%s\nRoll 2:\n%s\nResulting Roll:\n%s", dice, rolls[0].DiscordString(), rolls[1].DiscordString(), result.DiscordString())
 	default:
 		roll := dice.Roll()
-		msg = fmt.Sprintf("Rolling %s\n%s", dice, roll.DiscordString())
+		msg = displayDiceRoll(dice.String(), roll)
 	}
 
 	respond(session, interactionEvent, msg)
