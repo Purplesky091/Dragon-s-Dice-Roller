@@ -75,39 +75,6 @@ func (dice Dice) RollDisadvantage() (DiceRoll, []DiceRoll) {
 	return minRoll, rolls
 }
 
-// func (dice Dice) RollTripleDisadvantage() (int, [3]int) {
-// 	slog.Debug("Printing dice used", "dice", dice)
-// 	min := math.MaxInt
-// 	var rolls [3]int
-// 	for i := 0; i < 3; i++ {
-// 		rolls[i] = dice.Roll()
-// 		slog.Info("Disadvantage roll", "dice_roll", i+1, "roll", rolls[i])
-// 		if rolls[i] < min {
-// 			min = rolls[i]
-// 		}
-// 	}
-
-// 	slog.Info("Disadvantage Result", "min", min)
-
-// 	return min, rolls
-// }
-
-// func (dice Dice) RollTripleAdvantage() (int, [3]int) {
-// 	max := 0
-// 	var rolls [3]int
-// 	for i := 0; i < 3; i++ {
-// 		rolls[i] = dice.Roll()
-// 		slog.Info("Triple Advantage roll", "dice_roll", i+1, "roll", rolls[i])
-// 		if rolls[i] > max {
-// 			max = rolls[i]
-// 		}
-// 	}
-
-// 	slog.Info("Triple Advantage Result", "max", max)
-
-// 	return max, rolls
-// }
-
 func NewDice(dice string) (Dice, error) {
 	if len(dice) > diceLengthCap {
 		return Dice{}, fmt.Errorf("Dice input is too long. It must be %d characters or less", diceLengthCap)
