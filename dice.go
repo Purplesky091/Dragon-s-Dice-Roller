@@ -141,7 +141,9 @@ func NewDice(dice string) (Dice, error) {
 		return Dice{}, fmt.Errorf("Invalid face count: %w", err)
 	}
 
-	if faceCount > faceCap {
+	if faceCount == 0 {
+		return Dice{}, fmt.Errorf("Can't roll a d0. Number of faces must be 1 or higher")
+	} else if faceCount > faceCap {
 		return Dice{}, fmt.Errorf("Can't roll a d%d. Max is d%d", faceCount, faceCap)
 	}
 
