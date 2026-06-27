@@ -10,9 +10,10 @@ import (
 )
 
 var diceRegex = regexp.MustCompile(`^(\d+)?d(\d+)$`)
-var diceCountCap = 1000
-var faceCap = 1000
-var diceLengthCap = 10
+
+const diceCountCap int = 1000
+const faceCap int = 1000
+const diceLengthCap int = 10
 
 func randRange(min int, max int) int {
 	return rand.IntN(max+1-min) + min
