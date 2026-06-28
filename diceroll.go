@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
 
 type DiceRoll struct {
 	result int
@@ -20,4 +24,19 @@ func (diceRoll DiceRoll) DiscordString() string {
 	}
 
 	return result
+}
+
+func (diceRoll DiceRoll) writeRollsWrapped() string {
+	var builder strings.Builder
+	for index, roll := range diceRoll.rolls {
+		builder.WriteString(strconv.Itoa(roll))
+		if (index+1)%5 == 0 {
+			builder.WriteString("\n")
+
+		} else {
+			builder.WriteString(" ")
+		}
+	}
+
+	return builder.String()
 }

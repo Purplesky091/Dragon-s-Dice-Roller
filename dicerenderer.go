@@ -34,7 +34,9 @@ func NewDiceRenderer() *DiceRenderer {
 				Alignment: tw.CellAlignment{Global: tw.AlignCenter},
 			},
 			Row: tw.CellConfig{
-				Alignment: tw.CellAlignment{Global: tw.AlignCenter},
+				Alignment:    tw.CellAlignment{Global: tw.AlignCenter},
+				Formatting:   tw.CellFormatting{AutoWrap: tw.WrapNormal},
+				ColMaxWidths: tw.CellWidth{Global: 17},
 			},
 		}),
 	)
