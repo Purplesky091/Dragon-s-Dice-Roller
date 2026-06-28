@@ -83,7 +83,7 @@ func (diceRenderer *DiceRenderer) RenderRoll(diceStr string, diceRoll DiceRoll) 
 
 	builder.Reset()
 	table.Reset()
-	builder.WriteString("```")
+	builder.WriteString("```\n")
 
 	if len(diceRoll.rolls) > MaxDisplayableRolls {
 		table.Header(diceStr)
