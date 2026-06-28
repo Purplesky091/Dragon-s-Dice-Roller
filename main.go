@@ -10,13 +10,14 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var opts = &slog.HandlerOptions{Level: slog.LevelInfo}
-var logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
-
 const useDiscordBot = true
 const MaxDiscordMsgLength = 2000
 const MaxDisplayableRolls = 30 // how big the dice count can be before I stop showing the rolls
 const RowRollSize int = 5
+
+var opts = &slog.HandlerOptions{Level: slog.LevelInfo}
+var logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
+var diceRenderer *DiceRenderer = NewDiceRenderer(RowRollSize)
 
 var rollOptions = []*discordgo.ApplicationCommandOption{
 	{
@@ -78,7 +79,6 @@ func handleRoll(session *discordgo.Session, interactionEvent *discordgo.Interact
 	}
 
 	var msg string
-	var diceRenderer *DiceRenderer = NewDiceRenderer(RowRollSize)
 
 	switch rollType {
 	case "advantage":
