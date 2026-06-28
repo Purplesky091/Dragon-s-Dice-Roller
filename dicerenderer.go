@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -14,6 +13,8 @@ type DiceRenderer struct {
 	table   *tablewriter.Table
 	builder *strings.Builder
 }
+
+const RowRollSize int = 5
 
 func NewDiceRenderer() *DiceRenderer {
 	var builder strings.Builder
@@ -34,9 +35,7 @@ func NewDiceRenderer() *DiceRenderer {
 				Alignment: tw.CellAlignment{Global: tw.AlignCenter},
 			},
 			Row: tw.CellConfig{
-				Alignment:    tw.CellAlignment{Global: tw.AlignCenter},
-				Formatting:   tw.CellFormatting{AutoWrap: tw.WrapNormal},
-				ColMaxWidths: tw.CellWidth{Global: 17},
+				Alignment: tw.CellAlignment{Global: tw.AlignCenter},
 			},
 		}),
 	)
@@ -46,6 +45,35 @@ func NewDiceRenderer() *DiceRenderer {
 func (diceRenderer *DiceRenderer) renderRoll(diceStr string, diceRoll DiceRoll) string {
 	table := diceRenderer.table
 	builder := diceRenderer.builder
+
+	createRollsSubtable := func(rolls []int) string {
+		var buf strings.Builder
+		table := tablewriter.NewTable(&buf,
+			tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+				Borders: tw.BorderNone,
+				Settings: tw.Settings{
+					Separators: tw.SeparatorsNone,
+					Lines:      tw.LinesNone,
+				},
+			})),
+			tablewriter.WithConfig(tablewriter.Config{
+				Row: tw.CellConfig{Alignment: tw.CellAlignment{Global: tw.AlignCenter}},
+			}),
+		)
+
+		for i := 0; i < len(rolls); i += RowRollSize {
+			end := min(i+RowRollSize, len(rolls))
+			rowRoll := make([]string, end-i)
+			for j, roll := range rolls[i:end] {
+				rowRoll[j] = strconv.Itoa(roll)
+			}
+
+			table.Append(rowRoll)
+		}
+
+		table.Render()
+		return buf.String()
+	}
 
 	builder.Reset()
 	table.Reset()
@@ -58,7 +86,7 @@ func (diceRenderer *DiceRenderer) renderRoll(diceStr string, diceRoll DiceRoll) 
 	} else {
 		table.Header(diceStr, diceStr)
 		table.Append([]string{"rolls", "sum"})
-		table.Append([]string{fmt.Sprintf("%v", diceRoll.rolls), strconv.Itoa(diceRoll.result)})
+		table.Append([]string{createRollsSubtable(diceRoll.rolls), strconv.Itoa(diceRoll.result)})
 	}
 
 	table.Render()
