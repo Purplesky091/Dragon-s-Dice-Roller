@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-var diceRegex = regexp.MustCompile(`^(\d+)?d(\d+)$`)
+var diceRegex = regexp.MustCompile(`^(\d+)?d(\d+)(kh|k\d+h)?$`)
 
 const diceCountCap int = 1000
 const faceCap int = 1000

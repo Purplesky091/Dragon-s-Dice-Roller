@@ -77,7 +77,7 @@ func (diceRenderer *DiceRenderer) createRollsSubtable(rolls []int) string {
 	return buf.String()
 }
 
-func (diceRenderer *DiceRenderer) renderRoll(diceStr string, diceRoll DiceRoll) string {
+func (diceRenderer *DiceRenderer) RenderRoll(diceStr string, diceRoll DiceRoll) string {
 	table := diceRenderer.table
 	builder := diceRenderer.builder
 
