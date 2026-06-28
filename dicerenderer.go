@@ -10,13 +10,14 @@ import (
 )
 
 type DiceRenderer struct {
-	table   *tablewriter.Table
-	builder *strings.Builder
+	table       *tablewriter.Table
+	builder     *strings.Builder
+	RowRollSize int
 }
 
-const RowRollSize int = 5
+// const RowRollSize int = 5
 
-func NewDiceRenderer() *DiceRenderer {
+func NewDiceRenderer(RowRollSize int) *DiceRenderer {
 	var builder strings.Builder
 
 	table := tablewriter.NewTable(&builder, tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
@@ -39,41 +40,46 @@ func NewDiceRenderer() *DiceRenderer {
 			},
 		}),
 	)
-	return &DiceRenderer{table: table, builder: &builder}
+
+	if RowRollSize == 0 {
+		RowRollSize = 5
+	}
+
+	return &DiceRenderer{table: table, builder: &builder, RowRollSize: RowRollSize}
+}
+
+func (diceRenderer *DiceRenderer) createRollsSubtable(rolls []int) string {
+	var buf strings.Builder
+	table := tablewriter.NewTable(&buf,
+		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+			Borders: tw.BorderNone,
+			Settings: tw.Settings{
+				Separators: tw.SeparatorsNone,
+				Lines:      tw.LinesNone,
+			},
+		})),
+		tablewriter.WithConfig(tablewriter.Config{
+			Row: tw.CellConfig{Alignment: tw.CellAlignment{Global: tw.AlignCenter}},
+		}),
+	)
+
+	for i := 0; i < len(rolls); i += diceRenderer.RowRollSize {
+		end := min(i+diceRenderer.RowRollSize, len(rolls))
+		rowRoll := make([]string, end-i)
+		for j, roll := range rolls[i:end] {
+			rowRoll[j] = strconv.Itoa(roll)
+		}
+
+		table.Append(rowRoll)
+	}
+
+	table.Render()
+	return buf.String()
 }
 
 func (diceRenderer *DiceRenderer) renderRoll(diceStr string, diceRoll DiceRoll) string {
 	table := diceRenderer.table
 	builder := diceRenderer.builder
-
-	createRollsSubtable := func(rolls []int) string {
-		var buf strings.Builder
-		table := tablewriter.NewTable(&buf,
-			tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
-				Borders: tw.BorderNone,
-				Settings: tw.Settings{
-					Separators: tw.SeparatorsNone,
-					Lines:      tw.LinesNone,
-				},
-			})),
-			tablewriter.WithConfig(tablewriter.Config{
-				Row: tw.CellConfig{Alignment: tw.CellAlignment{Global: tw.AlignCenter}},
-			}),
-		)
-
-		for i := 0; i < len(rolls); i += RowRollSize {
-			end := min(i+RowRollSize, len(rolls))
-			rowRoll := make([]string, end-i)
-			for j, roll := range rolls[i:end] {
-				rowRoll[j] = strconv.Itoa(roll)
-			}
-
-			table.Append(rowRoll)
-		}
-
-		table.Render()
-		return buf.String()
-	}
 
 	builder.Reset()
 	table.Reset()
@@ -86,7 +92,7 @@ func (diceRenderer *DiceRenderer) renderRoll(diceStr string, diceRoll DiceRoll) 
 	} else {
 		table.Header(diceStr, diceStr)
 		table.Append([]string{"rolls", "sum"})
-		table.Append([]string{createRollsSubtable(diceRoll.rolls), strconv.Itoa(diceRoll.result)})
+		table.Append([]string{diceRenderer.createRollsSubtable(diceRoll.rolls), strconv.Itoa(diceRoll.result)})
 	}
 
 	table.Render()
