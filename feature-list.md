@@ -1,0 +1,1 @@
+- implement keep/drop rolls - https://wiki.roll20.net/Dice_Reference#Keep_.2F_Drop_khN.2FklN.2FdhN.2FdlN
