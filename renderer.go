@@ -6,17 +6,17 @@ import (
 	"strings"
 )
 
-func displayDiceRoll(diceStr string, diceRoll DiceRoll) string {
+func RenderDiceRoll(diceStr string, diceRoll DiceRoll) string {
 	sumStr := strconv.Itoa(diceRoll.result)
 
 	if len(diceRoll.rolls) > MaxDisplayableRolls {
-		return displaySingleCol(diceStr, sumStr)
+		return renderSingleCol(diceStr, sumStr)
 	}
 
-	return displayTwoCol(diceStr, sumStr, fmt.Sprintf("%v", diceRoll.rolls))
+	return renderTwoCol(diceStr, sumStr, fmt.Sprintf("%v", diceRoll.rolls))
 }
 
-func displaySingleCol(diceStr string, sumStr string) string {
+func renderSingleCol(diceStr string, sumStr string) string {
 	width := max(len(diceStr), len("sum"), len(sumStr))
 
 	top := "╔" + strings.Repeat("═", width+2) + "╗"
@@ -37,7 +37,7 @@ func displaySingleCol(diceStr string, sumStr string) string {
 	}, "\n")
 }
 
-func displayTwoCol(diceStr, sumStr, rollsStr string) string {
+func renderTwoCol(diceStr, sumStr, rollsStr string) string {
 	w1 := max(len("rolls"), len(rollsStr))
 	w2 := max(len("sum"), len(sumStr))
 	innerWidth := w1 + w2 + 3
