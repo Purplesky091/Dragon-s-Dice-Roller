@@ -77,12 +77,14 @@ func handleRoll(session *discordgo.Session, interactionEvent *discordgo.Interact
 	}
 
 	var msg string
+	var diceRenderer *DiceRenderer = NewDiceRenderer()
+
 	switch rollType {
 	case "advantage":
 		result, rolls := dice.RollAdvantage()
-		dice1 := RenderDiceRoll(dice.String(), rolls[0])
-		dice2 := RenderDiceRoll(dice.String(), rolls[1])
-		resultingDice := RenderDiceRoll(dice.String(), result)
+		dice1 := diceRenderer.renderRoll(dice.String(), rolls[0])
+		dice2 := diceRenderer.renderRoll(dice.String(), rolls[1])
+		resultingDice := diceRenderer.renderRoll(dice.String(), result)
 		msg = strings.Join([]string{
 			"Rolling " + dice.String() + " with Advantage",
 			"Roll 1:",
@@ -94,9 +96,9 @@ func handleRoll(session *discordgo.Session, interactionEvent *discordgo.Interact
 		}, "\n")
 	case "disadvantage":
 		result, rolls := dice.RollDisadvantage()
-		dice1 := RenderDiceRoll(dice.String(), rolls[0])
-		dice2 := RenderDiceRoll(dice.String(), rolls[1])
-		resultingDice := RenderDiceRoll(dice.String(), result)
+		dice1 := diceRenderer.renderRoll(dice.String(), rolls[0])
+		dice2 := diceRenderer.renderRoll(dice.String(), rolls[1])
+		resultingDice := diceRenderer.renderRoll(dice.String(), result)
 		msg = strings.Join([]string{
 			"Rolling " + dice.String() + " with disadvantage",
 			"Roll 1:",
@@ -108,7 +110,7 @@ func handleRoll(session *discordgo.Session, interactionEvent *discordgo.Interact
 		}, "\n")
 	default:
 		roll := dice.Roll()
-		msg = RenderDiceRoll(dice.String(), roll)
+		msg = diceRenderer.renderRoll(dice.String(), roll)
 	}
 
 	respond(session, interactionEvent, msg)
