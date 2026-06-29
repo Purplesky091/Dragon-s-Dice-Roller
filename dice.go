@@ -6,6 +6,7 @@ import (
 	"math"
 	"math/rand/v2"
 	"regexp"
+	"slices"
 	"strconv"
 )
 
@@ -19,9 +20,20 @@ func randRange(min int, max int) int {
 	return rand.IntN(max+1-min) + min
 }
 
+type PostAction func(rolls []int) []int
+
+func KeepHighest(n int) PostAction {
+	return func(rolls []int) []int {
+		slices.Sort(rolls)
+		slices.Reverse(rolls)
+		return rolls[0:n]
+	}
+}
+
 type Dice struct {
-	count int
-	faces int
+	count      int
+	faces      int
+	postAction PostAction
 }
 
 func (dice Dice) String() string {
@@ -30,16 +42,26 @@ func (dice Dice) String() string {
 
 func (dice Dice) Roll() DiceRoll {
 	slog.Debug("Roll", "dice", dice)
-	var result int = 0
+
 	rolls := make([]int, dice.count)
 
 	for i := 0; i < dice.count; i++ {
 		roll := randRange(1, dice.faces)
 		slog.Debug("Rolled value", "roll", roll)
 		rolls[i] = roll
-		result += roll
 	}
-	return DiceRoll{result: result, rolls: rolls}
+
+	kept := rolls
+	if dice.postAction != nil {
+		kept = dice.postAction(rolls)
+	}
+
+	result := 0
+	for _, keptRoll := range kept {
+		result += keptRoll
+	}
+
+	return DiceRoll{result: result, rolls: kept}
 }
 
 func (dice Dice) RollAdvantage() (DiceRoll, []DiceRoll) {
@@ -117,6 +139,7 @@ func NewDice(dice string) (Dice, error) {
 	}
 
 	hasKeepFlag := matches["KeepFlag"] != ""
+	var postAction PostAction = nil
 	if hasKeepFlag {
 		slog.Info("Found kh")
 
@@ -127,9 +150,11 @@ func NewDice(dice string) (Dice, error) {
 			keepCount, _ = strconv.Atoi(matches["KeepCount"])
 			slog.Info("KeepCount set", "keepCount", keepCount)
 		}
+
+		postAction = KeepHighest(keepCount)
 	}
 
-	return Dice{count: diceCount, faces: faceCount}, nil
+	return Dice{count: diceCount, faces: faceCount, postAction: postAction}, nil
 }
 
 func makeSubmatchMap(regex *regexp.Regexp, inputString string) (map[string]string, error) {
