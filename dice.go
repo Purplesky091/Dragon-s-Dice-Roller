@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-var diceRegex = regexp.MustCompile(`^(?P<DiceCount>\d+)?d(?P<FaceCount>\d+)(?P<KeepFlag>kh)?(?P<KeepCount>\d+)?$`)
+var diceRegex = regexp.MustCompile(`^(?P<DiceCount>\d+)?d(?P<FaceCount>\d+)(?P<PostApplyFlag>kh|dl)?(?P<PostApplyCount>\d+)?$`)
 
 const diceCountCap int = 1000
 const faceCap int = 1000
@@ -27,6 +27,13 @@ func KeepHighest(n int) PostAction {
 		slices.Sort(rolls)
 		slices.Reverse(rolls)
 		return rolls[0:n]
+	}
+}
+
+func DropLowest(n int) PostAction {
+	return func(rolls []int) []int {
+		slices.Sort(rolls)
+		return rolls[n:]
 	}
 }
 
@@ -109,7 +116,6 @@ func NewDice(dice string) (Dice, error) {
 	}
 	var diceCount int = 1 // assume default of 1 in case first parameter is not provided (since the number before d is optional and if left blank means 1)
 	var faceCount int
-	var keepCount int = -1
 
 	if matches["DiceCount"] != "" {
 		var err error
@@ -138,20 +144,24 @@ func NewDice(dice string) (Dice, error) {
 		return Dice{}, fmt.Errorf("Can't roll a d%d. Max is d%d", faceCount, faceCap)
 	}
 
-	hasKeepFlag := matches["KeepFlag"] != ""
+	postApplyFlag := matches["PostApplyFlag"]
 	var postAction PostAction = nil
-	if hasKeepFlag {
-		slog.Info("Found kh")
+	if postApplyFlag != "" {
+		var postApplyCount int = 1
+		slog.Info("PostApplyFlag set", "postApplyFlag", postApplyFlag)
+		if matches["PostApplyCount"] != "" {
+			postApplyCount, _ = strconv.Atoi(matches["PostApplyCount"])
+			slog.Info("PostApplyCount set", "PostApplyCount", postApplyCount)
 
-		if matches["KeepCount"] == "" {
-			keepCount = 1
-			slog.Info("KeepCount set to default value")
-		} else {
-			keepCount, _ = strconv.Atoi(matches["KeepCount"])
-			slog.Info("KeepCount set", "keepCount", keepCount)
+			switch postApplyFlag {
+			case "kh":
+				postAction = KeepHighest(postApplyCount)
+			case "dl":
+				postAction = DropLowest(postApplyCount)
+			default:
+				postAction = nil
+			}
 		}
-
-		postAction = KeepHighest(keepCount)
 	}
 
 	return Dice{count: diceCount, faces: faceCount, postAction: postAction}, nil
