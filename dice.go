@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-var diceRegex = regexp.MustCompile(`^(\d+)?d(\d+)(kh|k\d+h)?$`)
+var diceRegex = regexp.MustCompile(`^(?P<DiceCount>\d+)?d(?P<FaceCount>\d+)(?P<KeepFlag>kh)?(?P<KeepCount>\d+)?$`)
 
 const diceCountCap int = 1000
 const faceCap int = 1000
@@ -81,16 +81,17 @@ func NewDice(dice string) (Dice, error) {
 		return Dice{}, fmt.Errorf("Dice input is too long. It must be %d characters or less", diceLengthCap)
 	}
 
-	matches := diceRegex.FindStringSubmatch(dice)
+	matches, matchingErr := makeSubmatchMap(diceRegex, dice)
+	if matchingErr != nil {
+		return Dice{}, matchingErr
+	}
 	var diceCount int = 1 // assume default of 1 in case first parameter is not provided (since the number before d is optional and if left blank means 1)
 	var faceCount int
-	if matches == nil {
-		return Dice{}, fmt.Errorf("%q isn't a valid dice. Format is <number>d<number> (e.g. 2d6)", dice)
-	}
+	var keepCount int = -1
 
-	if matches[1] != "" {
+	if matches["DiceCount"] != "" {
 		var err error
-		diceCount, err = strconv.Atoi(matches[1])
+		diceCount, err = strconv.Atoi(matches["DiceCount"])
 		if err != nil {
 			return Dice{}, fmt.Errorf("Invalid dice count: %w", err)
 		}
@@ -104,7 +105,7 @@ func NewDice(dice string) (Dice, error) {
 		}
 	}
 
-	faceCount, err := strconv.Atoi(matches[2])
+	faceCount, err := strconv.Atoi(matches["FaceCount"])
 	if err != nil {
 		return Dice{}, fmt.Errorf("Invalid face count: %w", err)
 	}
@@ -115,5 +116,34 @@ func NewDice(dice string) (Dice, error) {
 		return Dice{}, fmt.Errorf("Can't roll a d%d. Max is d%d", faceCount, faceCap)
 	}
 
+	hasKeepFlag := matches["KeepFlag"] != ""
+	if hasKeepFlag {
+		slog.Info("Found kh")
+
+		if matches["KeepCount"] == "" {
+			keepCount = 1
+			slog.Info("KeepCount set to default value")
+		} else {
+			keepCount, _ = strconv.Atoi(matches["KeepCount"])
+			slog.Info("KeepCount set", "keepCount", keepCount)
+		}
+	}
+
 	return Dice{count: diceCount, faces: faceCount}, nil
+}
+
+func makeSubmatchMap(regex *regexp.Regexp, inputString string) (map[string]string, error) {
+	matches := regex.FindStringSubmatch(inputString)
+	if matches == nil {
+		return nil, fmt.Errorf("%q isn't a valid dice. Format is <number>d<number> (e.g. 2d6)", inputString)
+	}
+
+	subMatchMap := make(map[string]string)
+	for index, captureGroup := range regex.SubexpNames() {
+		if index > 0 {
+			subMatchMap[captureGroup] = matches[index]
+		}
+	}
+
+	return subMatchMap, nil
 }
