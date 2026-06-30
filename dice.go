@@ -6,7 +6,6 @@ import (
 	"math"
 	"math/rand/v2"
 	"regexp"
-	"slices"
 	"strconv"
 )
 
@@ -20,22 +19,22 @@ func randRange(min int, max int) int {
 	return rand.IntN(max+1-min) + min
 }
 
-type PostAction func(rolls []int) []int
+// type PostAction func(rolls []int) []int
 
-func KeepHighest(n int) PostAction {
-	return func(rolls []int) []int {
-		slices.Sort(rolls)
-		slices.Reverse(rolls)
-		return rolls[0:n]
-	}
-}
+// func KeepHighest(n int) PostAction {
+// 	return func(rolls []int) []int {
+// 		slices.Sort(rolls)
+// 		slices.Reverse(rolls)
+// 		return rolls[0:n]
+// 	}
+// }
 
-func DropLowest(n int) PostAction {
-	return func(rolls []int) []int {
-		slices.Sort(rolls)
-		return rolls[n:]
-	}
-}
+// func DropLowest(n int) PostAction {
+// 	return func(rolls []int) []int {
+// 		slices.Sort(rolls)
+// 		return rolls[n:]
+// 	}
+// }
 
 type Dice struct {
 	count      int
@@ -44,7 +43,11 @@ type Dice struct {
 }
 
 func (dice Dice) String() string {
-	return fmt.Sprintf("%dd%d", dice.count, dice.faces)
+	if dice.postAction == nil {
+		return fmt.Sprintf("%dd%d", dice.count, dice.faces)
+	}
+	return fmt.Sprintf("%dd%d%s", dice.count, dice.faces, dice.postAction)
+
 }
 
 func (dice Dice) Roll() DiceRoll {
@@ -60,7 +63,7 @@ func (dice Dice) Roll() DiceRoll {
 
 	kept := rolls
 	if dice.postAction != nil {
-		kept = dice.postAction(rolls)
+		kept = dice.postAction.ApplyFilter(rolls)
 	}
 
 	result := 0
@@ -146,21 +149,24 @@ func NewDice(dice string) (Dice, error) {
 
 	postApplyFlag := matches["PostApplyFlag"]
 	var postAction PostAction = nil
+
 	if postApplyFlag != "" {
 		var postApplyCount int = 1
 		slog.Info("PostApplyFlag set", "postApplyFlag", postApplyFlag)
 		if matches["PostApplyCount"] != "" {
 			postApplyCount, _ = strconv.Atoi(matches["PostApplyCount"])
 			slog.Info("PostApplyCount set", "PostApplyCount", postApplyCount)
+		} else {
+			slog.Info("No PostApplyCount set. Defaulting to 1")
+		}
 
-			switch postApplyFlag {
-			case "kh":
-				postAction = KeepHighest(postApplyCount)
-			case "dl":
-				postAction = DropLowest(postApplyCount)
-			default:
-				postAction = nil
-			}
+		switch postApplyFlag {
+		case "kh":
+			postAction = KeepHighest{keepCount: postApplyCount}
+		case "dl":
+			postAction = DropLowest{dropCount: postApplyCount}
+		default:
+			postAction = nil
 		}
 	}
 
