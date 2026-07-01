@@ -7,8 +7,9 @@ import (
 )
 
 type DiceRoll struct {
-	result int
-	rolls  []int
+	result  int
+	rolls   []int
+	dropped []int
 }
 
 func (diceRoll DiceRoll) String() string {
