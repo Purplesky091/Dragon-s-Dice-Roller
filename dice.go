@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log/slog"
-	"math"
 	"math/rand/v2"
 	"regexp"
 	"strconv"
@@ -74,40 +73,6 @@ func (dice Dice) Roll() DiceRoll {
 	}
 
 	return DiceRoll{result: result, rolls: kept, dropped: dropped}
-}
-
-func (dice Dice) RollAdvantage() (DiceRoll, []DiceRoll) {
-	var maxDice DiceRoll = DiceRoll{result: 0, rolls: nil}
-	var diceRolls []DiceRoll = make([]DiceRoll, 2)
-
-	for i := 0; i < 2; i++ {
-		diceRolls[i] = dice.Roll()
-		if diceRolls[i].result > maxDice.result {
-			maxDice = diceRolls[i]
-		}
-	}
-
-	slog.Info("Advantage roll result", "maxDice", maxDice)
-
-	return maxDice, diceRolls
-}
-
-func (dice Dice) RollDisadvantage() (DiceRoll, []DiceRoll) {
-	slog.Debug("Printing dice used", "dice", dice)
-	var minRoll DiceRoll = DiceRoll{result: math.MaxInt, rolls: nil}
-	var rolls []DiceRoll = make([]DiceRoll, 2)
-
-	for i := 0; i < 2; i++ {
-		rolls[i] = dice.Roll()
-		slog.Info("Disadvantage roll", "dice_roll", i+1, "roll", rolls[i])
-		if rolls[i].result < minRoll.result {
-			minRoll = rolls[i]
-		}
-	}
-
-	slog.Info("Disadvantage roll result", "minRoll", minRoll)
-
-	return minRoll, rolls
 }
 
 func NewDice(dice string) (Dice, error) {
