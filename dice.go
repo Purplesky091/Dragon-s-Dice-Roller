@@ -18,23 +18,6 @@ func randRange(min int, max int) int {
 	return rand.IntN(max+1-min) + min
 }
 
-// type PostAction func(rolls []int) []int
-
-// func KeepHighest(n int) PostAction {
-// 	return func(rolls []int) []int {
-// 		slices.Sort(rolls)
-// 		slices.Reverse(rolls)
-// 		return rolls[0:n]
-// 	}
-// }
-
-// func DropLowest(n int) PostAction {
-// 	return func(rolls []int) []int {
-// 		slices.Sort(rolls)
-// 		return rolls[n:]
-// 	}
-// }
-
 type Dice struct {
 	count      int
 	faces      int
