@@ -23,6 +23,9 @@ func (khAction KeepHighest) ApplyFilter(rolls []int) ([]int, []int) {
 		indices[i] = i
 	}
 
+	// Sort a slice of indices by their corresponding roll values (descending).
+	// This lets us rank rolls by value without reordering the original slice,
+	// so we can mark which positions are dropped while preserving insertion order.
 	slices.SortFunc(indices, func(a, b int) int {
 		return rolls[b] - rolls[a] // sort in descending order
 	})
