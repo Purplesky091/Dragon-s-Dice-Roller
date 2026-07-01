@@ -52,6 +52,18 @@ func respond(session *discordgo.Session, interactionEvent *discordgo.Interaction
 	}
 }
 
+func respondWithEmbed(session *discordgo.Session, interactionEvent *discordgo.InteractionCreate, embed *discordgo.MessageEmbed) {
+	err := session.InteractionRespond(interactionEvent.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Embeds: []*discordgo.MessageEmbed{embed},
+		},
+	})
+	if err != nil {
+		slog.Error("Failed to respond to interaction", "error", err)
+	}
+}
+
 func handleRoll(session *discordgo.Session, interactionEvent *discordgo.InteractionCreate) {
 	options := interactionEvent.ApplicationCommandData().Options
 
@@ -66,15 +78,12 @@ func handleRoll(session *discordgo.Session, interactionEvent *discordgo.Interact
 		rollType = options[1].StringValue()
 	}
 
-	var msg string
-
 	switch rollType {
 	default:
 		roll := dice.Roll()
-		msg = diceRenderer.RenderRoll(dice.String(), roll)
+		respondWithEmbed(session, interactionEvent, diceRenderer.RenderEmbed(dice.String(), roll))
+		return
 	}
-
-	respond(session, interactionEvent, msg)
 }
 
 func main() {

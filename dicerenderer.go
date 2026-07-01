@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/olekukonko/tablewriter"
 	"github.com/olekukonko/tablewriter/renderer"
 	"github.com/olekukonko/tablewriter/tw"
@@ -80,6 +81,51 @@ func (diceRenderer *DiceRenderer) createRollsSubtable(rolls []Roll) string {
 
 	table.Render()
 	return buf.String()
+}
+
+func (diceRenderer *DiceRenderer) RenderEmbed(diceStr string, rollResult RollResult) *discordgo.MessageEmbed {
+	color := 0x5865F2
+
+	if len(rollResult.rolls) > MaxDisplayableRolls {
+		return &discordgo.MessageEmbed{
+			Title: diceStr,
+			Color: color,
+			Fields: []*discordgo.MessageEmbedField{
+				{Name: "Total", Value: strconv.Itoa(rollResult.sum)},
+			},
+		}
+	}
+
+	var rollsBuilder strings.Builder
+	for i, roll := range rollResult.rolls {
+		if i > 0 {
+			if i%diceRenderer.RowRollSize == 0 {
+				rollsBuilder.WriteString("\n")
+			} else {
+				rollsBuilder.WriteString("  ")
+			}
+		}
+		if roll.dropped {
+			fmt.Fprintf(&rollsBuilder, "~~%d~~", roll.value)
+		} else {
+			rollsBuilder.WriteString(strconv.Itoa(roll.value))
+		}
+	}
+
+	embed := &discordgo.MessageEmbed{
+		Title: diceStr,
+		Color: color,
+		Fields: []*discordgo.MessageEmbedField{
+			{Name: "Rolls", Value: rollsBuilder.String(), Inline: true},
+			{Name: "Total", Value: strconv.Itoa(rollResult.sum), Inline: true},
+		},
+	}
+
+	if rollResult.hasDroppedValues {
+		embed.Footer = &discordgo.MessageEmbedFooter{Text: "Crossed out values were dropped"}
+	}
+
+	return embed
 }
 
 func (diceRenderer *DiceRenderer) RenderRoll(diceStr string, rollResult RollResult) string {
