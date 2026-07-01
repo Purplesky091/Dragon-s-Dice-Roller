@@ -5,8 +5,9 @@ import (
 )
 
 type RollResult struct {
-	sum   int
-	rolls []Roll
+	sum              int
+	rolls            []Roll
+	hasDroppedValues bool
 }
 
 func (diceRoll RollResult) String() string {

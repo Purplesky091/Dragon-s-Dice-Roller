@@ -18,15 +18,6 @@ func randRange(min int, max int) int {
 	return rand.IntN(max+1-min) + min
 }
 
-type Roll struct {
-	value   int
-	dropped bool
-}
-
-func (roll Roll) String() string {
-	return strconv.Itoa(roll.value)
-}
-
 type Dice struct {
 	count      int
 	faces      int
@@ -51,21 +42,23 @@ func (dice Dice) Roll() RollResult {
 		rollValue := randRange(1, dice.faces)
 		slog.Debug("Rolled value", "rollValue", rollValue)
 		rolls[i] = Roll{value: rollValue, dropped: false}
-		sum = rolls[i].value
+		sum += rolls[i].value
 	}
 
-	// kept := rolls
+	hasDroppedValues := dice.postAction != nil
 
-	// if dice.postAction != nil {
-	// 	kept, dropped = dice.postAction.ApplyFilter(rolls)
-	// }
+	if dice.postAction != nil {
+		dice.postAction.ApplyFilter(rolls)
+		sum = 0
+		for i := range rolls {
+			if rolls[i].dropped {
+				continue
+			}
+			sum += rolls[i].value
+		}
+	}
 
-	// result := 0
-	// for _, keptRoll := range kept {
-	// 	result += keptRoll
-	// }
-
-	return RollResult{sum: sum, rolls: rolls}
+	return RollResult{sum: sum, rolls: rolls, hasDroppedValues: hasDroppedValues}
 }
 
 func NewDice(dice string) (Dice, error) {

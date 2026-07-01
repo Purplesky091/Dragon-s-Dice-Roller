@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -67,7 +68,11 @@ func (diceRenderer *DiceRenderer) createRollsSubtable(rolls []Roll) string {
 		end := min(i+diceRenderer.RowRollSize, len(rolls))
 		rowRoll := make([]string, end-i)
 		for j, roll := range rolls[i:end] {
-			rowRoll[j] = roll.String()
+			if roll.dropped {
+				rowRoll[j] = fmt.Sprintf("(%s)", roll)
+			} else {
+				rowRoll[j] = roll.String()
+			}
 		}
 
 		table.Append(rowRoll)
@@ -89,10 +94,6 @@ func (diceRenderer *DiceRenderer) RenderRoll(diceStr string, rollResult RollResu
 		table.Header(diceStr)
 		table.Append([]string{"sum"})
 		table.Append([]string{strconv.Itoa(rollResult.sum)})
-		// } else if len(diceRoll.dropped) > 0 {
-		// table.Header(diceStr, diceStr, diceStr)
-		// table.Append([]string{"rolls", "dropped", "sum"})
-		// table.Append([]string{diceRenderer.createRollsSubtable(diceRoll.rolls), diceRenderer.createRollsSubtable(diceRoll.dropped), strconv.Itoa(diceRoll.result)})
 	} else {
 		table.Header(diceStr, diceStr)
 		table.Append([]string{"rolls", "sum"})
@@ -101,5 +102,6 @@ func (diceRenderer *DiceRenderer) RenderRoll(diceStr string, rollResult RollResu
 
 	table.Render()
 	builder.WriteString("```")
+	builder.WriteString("Dropped values surrounded in ()\n")
 	return builder.String()
 }

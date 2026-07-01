@@ -6,7 +6,7 @@ import (
 )
 
 type PostAction interface {
-	ApplyFilter(rolls []int) ([]int, []int)
+	ApplyFilter(rolls []Roll) []Roll
 }
 
 type KeepHighest struct {
@@ -17,7 +17,7 @@ func (postAction KeepHighest) String() string {
 	return fmt.Sprintf("kh%d", postAction.keepCount)
 }
 
-func (khAction KeepHighest) ApplyFilter(rolls []int) ([]int, []int) {
+func (khAction KeepHighest) ApplyFilter(rolls []Roll) []Roll {
 	indices := make([]int, len(rolls))
 	for i := range indices {
 		indices[i] = i
@@ -27,25 +27,14 @@ func (khAction KeepHighest) ApplyFilter(rolls []int) ([]int, []int) {
 	// This lets us rank rolls by value without reordering the original slice,
 	// so we can mark which positions are dropped while preserving insertion order.
 	slices.SortFunc(indices, func(a, b int) int {
-		return rolls[b] - rolls[a] // sort in descending order
+		return rolls[b].value - rolls[a].value // sort in descending order
 	})
 
-	isDropped := make([]bool, len(rolls))
-	for _, idx := range indices[khAction.keepCount:] {
-		isDropped[idx] = true
+	for _, indx := range indices[khAction.keepCount:] {
+		rolls[indx].dropped = true
 	}
 
-	kept := make([]int, 0, khAction.keepCount)
-	dropped := make([]int, 0, len(rolls)-khAction.keepCount)
-	for i, roll := range rolls {
-		if isDropped[i] {
-			dropped = append(dropped, roll)
-		} else {
-			kept = append(kept, roll)
-		}
-	}
-
-	return kept, dropped
+	return rolls
 }
 
 type DropLowest struct {
@@ -56,31 +45,19 @@ func (postAction DropLowest) String() string {
 	return fmt.Sprintf("dl%d", postAction.dropCount)
 }
 
-func (dlAction DropLowest) ApplyFilter(rolls []int) ([]int, []int) {
+func (dlAction DropLowest) ApplyFilter(rolls []Roll) []Roll {
 	indices := make([]int, len(rolls))
 	for i := range indices {
 		indices[i] = i
 	}
 
 	slices.SortFunc[[]int](indices, func(a, b int) int {
-		return rolls[a] - rolls[b]
+		return rolls[a].value - rolls[b].value
 	})
 
-	isDropped := make([]bool, len(rolls))
 	for _, indx := range indices[:dlAction.dropCount] {
-		isDropped[indx] = true
+		rolls[indx].dropped = true
 	}
 
-	kept := make([]int, 0, len(rolls)-dlAction.dropCount)
-	dropped := make([]int, 0, dlAction.dropCount)
-
-	for i, roll := range rolls {
-		if isDropped[i] {
-			dropped = append(dropped, roll)
-		} else {
-			kept = append(kept, roll)
-		}
-	}
-
-	return kept, dropped
+	return rolls
 }
