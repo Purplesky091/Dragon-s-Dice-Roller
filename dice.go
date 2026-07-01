@@ -67,34 +67,15 @@ func NewDice(dice string) (Dice, error) {
 	if matchingErr != nil {
 		return Dice{}, matchingErr
 	}
-	var diceCount int = 1 // assume default of 1 in case first parameter is not provided (since the number before d is optional and if left blank means 1)
-	var faceCount int
 
-	if matches["DiceCount"] != "" {
-		var err error
-		diceCount, err = strconv.Atoi(matches["DiceCount"])
-		if err != nil {
-			return Dice{}, fmt.Errorf("Invalid dice count: %w", err)
-		}
-
-		if diceCount == 0 {
-			return Dice{}, fmt.Errorf("Number of dice must be greater than 0")
-		}
-
-		if diceCount > diceCountCap {
-			return Dice{}, fmt.Errorf("The dice count %d in %q is too high. Max is %d", diceCount, dice, diceCountCap)
-		}
+	diceCount, diceCountErr := getDiceCount(matches["DiceCount"], dice)
+	if diceCountErr != nil {
+		return Dice{}, diceCountErr
 	}
 
-	faceCount, err := strconv.Atoi(matches["FaceCount"])
-	if err != nil {
-		return Dice{}, fmt.Errorf("Invalid face count: %w", err)
-	}
-
-	if faceCount == 0 {
-		return Dice{}, fmt.Errorf("Can't roll a d0. Number of faces must be 1 or higher")
-	} else if faceCount > faceCap {
-		return Dice{}, fmt.Errorf("Can't roll a d%d. Max is d%d", faceCount, faceCap)
+	faceCount, faceCountErr := getFaceCount(matches["FaceCount"])
+	if faceCountErr != nil {
+		return Dice{}, faceCountErr
 	}
 
 	postApplyFlag := matches["PostApplyFlag"]
@@ -137,4 +118,44 @@ func makeSubmatchMap(regex *regexp.Regexp, inputString string) (map[string]strin
 	}
 
 	return subMatchMap, nil
+}
+
+func getDiceCount(diceCountStr string, diceStr string) (int, error) {
+	// assume default of 1 in case first parameter is not provided (since the number before d is optional and if left blank means 1)
+	if diceCountStr == "" {
+		return 1, nil
+	}
+
+	var err error
+	var diceCount int
+
+	diceCount, err = strconv.Atoi(diceCountStr)
+	if err != nil {
+		return 0, fmt.Errorf("Invalid dice count: %w", err)
+	}
+
+	if diceCount == 0 {
+		return 0, fmt.Errorf("Number of dice must be greater than 0")
+	}
+
+	if diceCount > diceCountCap {
+		return 0, fmt.Errorf("The dice count %d in %q is too high. Max is %d", diceCount, diceStr, diceCountCap)
+	}
+
+	return diceCount, nil
+}
+
+func getFaceCount(faceCountStr string) (int, error) {
+	faceCount, err := strconv.Atoi(faceCountStr)
+	if err != nil {
+		return 0, fmt.Errorf("Invalid face count: %w", err)
+	}
+
+	if faceCount == 0 {
+		return 0, fmt.Errorf("Can't roll a d0. Number of faces must be 1 or higher")
+	} else if faceCount > faceCap {
+		return 0, fmt.Errorf("Can't roll a d%d. Max is d%d", faceCount, faceCap)
+	}
+
+	return faceCount, nil
 }
