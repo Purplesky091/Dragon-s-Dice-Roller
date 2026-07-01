@@ -48,7 +48,7 @@ func NewDiceRenderer(RowRollSize int) *DiceRenderer {
 	return &DiceRenderer{table: table, builder: &builder, RowRollSize: RowRollSize}
 }
 
-func (diceRenderer *DiceRenderer) createRollsSubtable(rolls []int) string {
+func (diceRenderer *DiceRenderer) createRollsSubtable(rolls []Roll) string {
 	var buf strings.Builder
 	table := tablewriter.NewTable(&buf,
 		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
@@ -67,7 +67,7 @@ func (diceRenderer *DiceRenderer) createRollsSubtable(rolls []int) string {
 		end := min(i+diceRenderer.RowRollSize, len(rolls))
 		rowRoll := make([]string, end-i)
 		for j, roll := range rolls[i:end] {
-			rowRoll[j] = strconv.Itoa(roll)
+			rowRoll[j] = roll.String()
 		}
 
 		table.Append(rowRoll)
@@ -77,7 +77,7 @@ func (diceRenderer *DiceRenderer) createRollsSubtable(rolls []int) string {
 	return buf.String()
 }
 
-func (diceRenderer *DiceRenderer) RenderRoll(diceStr string, diceRoll DiceRoll) string {
+func (diceRenderer *DiceRenderer) RenderRoll(diceStr string, rollResult RollResult) string {
 	table := diceRenderer.table
 	builder := diceRenderer.builder
 
@@ -85,18 +85,18 @@ func (diceRenderer *DiceRenderer) RenderRoll(diceStr string, diceRoll DiceRoll) 
 	table.Reset()
 	builder.WriteString("```\n")
 
-	if len(diceRoll.rolls) > MaxDisplayableRolls {
+	if len(rollResult.rolls) > MaxDisplayableRolls {
 		table.Header(diceStr)
 		table.Append([]string{"sum"})
-		table.Append([]string{strconv.Itoa(diceRoll.result)})
-	} else if len(diceRoll.dropped) > 0 {
-		table.Header(diceStr, diceStr, diceStr)
-		table.Append([]string{"rolls", "dropped", "sum"})
-		table.Append([]string{diceRenderer.createRollsSubtable(diceRoll.rolls), diceRenderer.createRollsSubtable(diceRoll.dropped), strconv.Itoa(diceRoll.result)})
+		table.Append([]string{strconv.Itoa(rollResult.sum)})
+		// } else if len(diceRoll.dropped) > 0 {
+		// table.Header(diceStr, diceStr, diceStr)
+		// table.Append([]string{"rolls", "dropped", "sum"})
+		// table.Append([]string{diceRenderer.createRollsSubtable(diceRoll.rolls), diceRenderer.createRollsSubtable(diceRoll.dropped), strconv.Itoa(diceRoll.result)})
 	} else {
 		table.Header(diceStr, diceStr)
 		table.Append([]string{"rolls", "sum"})
-		table.Append([]string{diceRenderer.createRollsSubtable(diceRoll.rolls), strconv.Itoa(diceRoll.result)})
+		table.Append([]string{diceRenderer.createRollsSubtable(rollResult.rolls), strconv.Itoa(rollResult.sum)})
 	}
 
 	table.Render()
