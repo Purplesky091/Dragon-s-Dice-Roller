@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
-	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -25,17 +24,6 @@ var rollOptions = []*discordgo.ApplicationCommandOption{
 		Name:        "dice",
 		Description: "Dice format (i.e. 2d6, d20, 4d4)",
 		Required:    true,
-	},
-	{
-		Type:        discordgo.ApplicationCommandOptionString,
-		Name:        "type",
-		Description: "What type of roll (advantage, disadvantage, normal). Defaults to normal",
-		Required:    false,
-		Choices: []*discordgo.ApplicationCommandOptionChoice{
-			{Name: "normal", Value: "normal"},
-			{Name: "advantage", Value: "advantage"},
-			{Name: "disadvantage", Value: "disadvantage"},
-		},
 	},
 }
 
@@ -81,34 +69,6 @@ func handleRoll(session *discordgo.Session, interactionEvent *discordgo.Interact
 	var msg string
 
 	switch rollType {
-	case "advantage":
-		result, rolls := dice.RollAdvantage()
-		dice1 := diceRenderer.RenderRoll(dice.String(), rolls[0])
-		dice2 := diceRenderer.RenderRoll(dice.String(), rolls[1])
-		resultingDice := diceRenderer.RenderRoll(dice.String(), result)
-		msg = strings.Join([]string{
-			"Rolling " + dice.String() + " with Advantage",
-			"Roll 1:",
-			dice1,
-			"Roll 2:",
-			dice2,
-			"Resulting Roll",
-			resultingDice,
-		}, "\n")
-	case "disadvantage":
-		result, rolls := dice.RollDisadvantage()
-		dice1 := diceRenderer.RenderRoll(dice.String(), rolls[0])
-		dice2 := diceRenderer.RenderRoll(dice.String(), rolls[1])
-		resultingDice := diceRenderer.RenderRoll(dice.String(), result)
-		msg = strings.Join([]string{
-			"Rolling " + dice.String() + " with disadvantage",
-			"Roll 1:",
-			dice1,
-			"Roll 2:",
-			dice2,
-			"Resulting Roll",
-			resultingDice,
-		}, "\n")
 	default:
 		roll := dice.Roll()
 		msg = diceRenderer.RenderRoll(dice.String(), roll)

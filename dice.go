@@ -13,7 +13,7 @@ var diceRegex = regexp.MustCompile(`^(?P<DiceCount>\d+)?d(?P<FaceCount>\d+)(?P<P
 
 const diceCountCap int = 1000
 const faceCap int = 1000
-const diceLengthCap int = 10
+const diceLengthCap int = 16
 
 func randRange(min int, max int) int {
 	return rand.IntN(max+1-min) + min
@@ -54,6 +54,7 @@ func (dice Dice) Roll() DiceRoll {
 	slog.Debug("Roll", "dice", dice)
 
 	rolls := make([]int, dice.count)
+	var dropped []int = nil
 
 	for i := 0; i < dice.count; i++ {
 		roll := randRange(1, dice.faces)
@@ -62,8 +63,9 @@ func (dice Dice) Roll() DiceRoll {
 	}
 
 	kept := rolls
+
 	if dice.postAction != nil {
-		kept = dice.postAction.ApplyFilter(rolls)
+		kept, dropped = dice.postAction.ApplyFilter(rolls)
 	}
 
 	result := 0
@@ -71,7 +73,7 @@ func (dice Dice) Roll() DiceRoll {
 		result += keptRoll
 	}
 
-	return DiceRoll{result: result, rolls: kept}
+	return DiceRoll{result: result, rolls: kept, dropped: dropped}
 }
 
 func (dice Dice) RollAdvantage() (DiceRoll, []DiceRoll) {

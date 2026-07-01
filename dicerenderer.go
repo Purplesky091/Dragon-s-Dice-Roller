@@ -89,6 +89,10 @@ func (diceRenderer *DiceRenderer) RenderRoll(diceStr string, diceRoll DiceRoll) 
 		table.Header(diceStr)
 		table.Append([]string{"sum"})
 		table.Append([]string{strconv.Itoa(diceRoll.result)})
+	} else if len(diceRoll.dropped) > 0 {
+		table.Header(diceStr, diceStr, diceStr)
+		table.Append([]string{"rolls", "dropped", "sum"})
+		table.Append([]string{diceRenderer.createRollsSubtable(diceRoll.rolls), diceRenderer.createRollsSubtable(diceRoll.dropped), strconv.Itoa(diceRoll.result)})
 	} else {
 		table.Header(diceStr, diceStr)
 		table.Append([]string{"rolls", "sum"})
