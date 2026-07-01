@@ -78,28 +78,7 @@ func NewDice(dice string) (Dice, error) {
 		return Dice{}, faceCountErr
 	}
 
-	postApplyFlag := matches["PostApplyFlag"]
-	var postAction PostAction = nil
-
-	if postApplyFlag != "" {
-		var postApplyCount int = 1
-		slog.Info("PostApplyFlag set", "postApplyFlag", postApplyFlag)
-		if matches["PostApplyCount"] != "" {
-			postApplyCount, _ = strconv.Atoi(matches["PostApplyCount"])
-			slog.Info("PostApplyCount set", "PostApplyCount", postApplyCount)
-		} else {
-			slog.Info("No PostApplyCount set. Defaulting to 1")
-		}
-
-		switch postApplyFlag {
-		case "kh":
-			postAction = KeepHighest{keepCount: postApplyCount}
-		case "dl":
-			postAction = DropLowest{dropCount: postApplyCount}
-		default:
-			postAction = nil
-		}
-	}
+	postAction := getPostAction(matches["PostApplyFlag"], matches["PostApplyCount"])
 
 	return Dice{count: diceCount, faces: faceCount, postAction: postAction}, nil
 }
@@ -158,4 +137,33 @@ func getFaceCount(faceCountStr string) (int, error) {
 	}
 
 	return faceCount, nil
+}
+
+func getPostAction(postApplyFlag string, postApplyCountStr string) PostAction {
+	var postAction PostAction = nil
+	var postApplyCount int
+
+	if postApplyFlag == "" {
+		return nil
+	}
+
+	slog.Info("PostApplyFlag set", "postApplyFlag", postApplyFlag)
+	if postApplyCountStr != "" {
+		postApplyCount, _ = strconv.Atoi(postApplyCountStr)
+		slog.Info("PostApplyCount set", "PostApplyCount", postApplyCount)
+	} else {
+		postApplyCount = 1
+		slog.Info("No PostApplyCount set. Defaulting to 1")
+	}
+
+	switch postApplyFlag {
+	case "kh":
+		postAction = KeepHighest{keepCount: postApplyCount}
+	case "dl":
+		postAction = DropLowest{dropCount: postApplyCount}
+	default:
+		postAction = nil
+	}
+
+	return postAction
 }
