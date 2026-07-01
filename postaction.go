@@ -53,9 +53,31 @@ func (postAction DropLowest) String() string {
 	return fmt.Sprintf("dl%d", postAction.dropCount)
 }
 
-func (keepHighestAction DropLowest) ApplyFilter(rolls []int) ([]int, []int) {
-	slices.Sort(rolls)
-	kept := rolls[keepHighestAction.dropCount:]
-	dropped := rolls[0:keepHighestAction.dropCount]
+func (dlAction DropLowest) ApplyFilter(rolls []int) ([]int, []int) {
+	indices := make([]int, len(rolls))
+	for i := range indices {
+		indices[i] = i
+	}
+
+	slices.SortFunc[[]int](indices, func(a, b int) int {
+		return rolls[a] - rolls[b]
+	})
+
+	isDropped := make([]bool, len(rolls))
+	for _, indx := range indices[:dlAction.dropCount] {
+		isDropped[indx] = true
+	}
+
+	kept := make([]int, 0, len(rolls)-dlAction.dropCount)
+	dropped := make([]int, 0, dlAction.dropCount)
+
+	for i, roll := range rolls {
+		if isDropped[i] {
+			dropped = append(dropped, roll)
+		} else {
+			kept = append(kept, roll)
+		}
+	}
+
 	return kept, dropped
 }
