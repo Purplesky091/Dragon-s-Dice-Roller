@@ -149,32 +149,32 @@ func getFaceCount(faceCountStr string) (int, error) {
 	return faceCount, nil
 }
 
-func getPostAction(postApplyFlag string, postApplyCountStr string) PostAction {
+func getPostAction(postActionFlag string, postActionCountStr string) PostAction {
 	var postAction PostAction = nil
-	var postApplyCount int
+	var postActionCount int
 
-	if postApplyFlag == "" {
+	if postActionFlag == "" {
 		return nil
 	}
 
-	slog.Info("PostApplyFlag set", "postApplyFlag", postApplyFlag)
-	if postApplyCountStr != "" {
-		postApplyCount, _ = strconv.Atoi(postApplyCountStr)
-		slog.Info("PostApplyCount set", "PostApplyCount", postApplyCount)
+	slog.Info("postActionFlag set", "postActionFlag", postActionFlag)
+	if postActionCountStr != "" {
+		postActionCount, _ = strconv.Atoi(postActionCountStr)
+		slog.Info("postActionCount set", "postActionCount", postActionCount)
 	} else {
-		postApplyCount = 1
-		slog.Info("No PostApplyCount set. Defaulting to 1")
+		postActionCount = 1
+		slog.Info("No postActionCount set. Defaulting to 1")
 	}
 
-	switch postApplyFlag {
+	switch postActionFlag {
 	case "kh":
-		postAction = KeepHighest{keepCount: postApplyCount}
+		postAction = KeepHighest{keepCount: postActionCount}
 	case "kl":
-		postAction = KeepLowest{keepCount: postApplyCount}
+		postAction = KeepLowest{keepCount: postActionCount}
 	case "dh":
-		postAction = DropHighest{dropCount: postApplyCount}
+		postAction = DropHighest{dropCount: postActionCount}
 	case "dl":
-		postAction = DropLowest{dropCount: postApplyCount}
+		postAction = DropLowest{dropCount: postActionCount}
 
 	}
 
