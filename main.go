@@ -131,11 +131,5 @@ func main() {
 	signal.Notify(stop, os.Interrupt)
 	<-stop
 
-	// Clean up slash commands on shutdown so they don't linger in Discord.
-	for _, cmd := range registeredCommands {
-		if err := dg.ApplicationCommandDelete(dg.State.User.ID, "", cmd.ID); err != nil {
-			slog.Warn("Could not delete command on shutdown", "name", cmd.Name, "error", err)
-		}
-	}
 	slog.Info("Bot shut down cleanly.")
 }
