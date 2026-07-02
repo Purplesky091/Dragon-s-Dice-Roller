@@ -17,8 +17,9 @@ type DiceRenderer struct {
 
 // const RowRollSize int = 5
 
-func NewDiceRenderer(RowRollSize int) *DiceRenderer {
+func NewDiceRenderer(RowRollSize ...int) *DiceRenderer {
 	var builder strings.Builder
+	var finalRowRollSize int = 5
 
 	table := tablewriter.NewTable(&builder, tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
 		Settings: tw.Settings{
@@ -41,11 +42,11 @@ func NewDiceRenderer(RowRollSize int) *DiceRenderer {
 		}),
 	)
 
-	if RowRollSize == 0 {
-		RowRollSize = 5
+	if len(RowRollSize) > 0 {
+		finalRowRollSize = RowRollSize[0]
 	}
 
-	return &DiceRenderer{table: table, builder: &builder, RowRollSize: RowRollSize}
+	return &DiceRenderer{table: table, builder: &builder, RowRollSize: finalRowRollSize}
 }
 
 func (diceRenderer *DiceRenderer) createRollsSubtable(rolls []int) string {

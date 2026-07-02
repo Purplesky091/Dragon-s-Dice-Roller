@@ -16,7 +16,7 @@ const RowRollSize int = 5
 
 var opts = &slog.HandlerOptions{Level: slog.LevelInfo}
 var logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
-var diceRenderer *DiceRenderer = NewDiceRenderer(RowRollSize)
+var diceRenderer *DiceRenderer = NewDiceRenderer()
 
 var rollOptions = []*discordgo.ApplicationCommandOption{
 	{
