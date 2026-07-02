@@ -88,7 +88,10 @@ func NewDice(dice string) (Dice, error) {
 		return Dice{}, faceCountErr
 	}
 
-	postAction := getPostAction(matches[POST_ACTION_FLAG], matches[POST_ACTION_COUNT])
+	postAction, postActionErr := getPostAction(diceCount, matches[POST_ACTION_FLAG], matches[POST_ACTION_COUNT])
+	if postActionErr != nil {
+		return Dice{}, postActionErr
+	}
 
 	return Dice{count: diceCount, faces: faceCount, postAction: postAction}, nil
 }
@@ -149,12 +152,12 @@ func getFaceCount(faceCountStr string) (int, error) {
 	return faceCount, nil
 }
 
-func getPostAction(postActionFlag string, postActionCountStr string) PostAction {
+func getPostAction(diceCount int, postActionFlag string, postActionCountStr string) (PostAction, error) {
 	var postAction PostAction = nil
 	var postActionCount int
 
 	if postActionFlag == "" {
-		return nil
+		return nil, nil
 	}
 
 	slog.Info("postActionFlag set", "postActionFlag", postActionFlag)
@@ -164,6 +167,10 @@ func getPostAction(postActionFlag string, postActionCountStr string) PostAction 
 	} else {
 		postActionCount = 1
 		slog.Info("No postActionCount set. Defaulting to 1")
+	}
+
+	if postActionCount > diceCount {
+		return nil, fmt.Errorf("Cannot keep/drop %d dice when there are only %d dice. You can only keep/drop %d or less dice", postActionCount, diceCount, diceCount)
 	}
 
 	switch postActionFlag {
@@ -178,5 +185,5 @@ func getPostAction(postActionFlag string, postActionCountStr string) PostAction 
 
 	}
 
-	return postAction
+	return postAction, nil
 }
