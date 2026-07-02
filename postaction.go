@@ -123,3 +123,40 @@ func (dlAction DropLowest) ApplyFilter(rolls []int) ([]int, []int) {
 
 	return kept, dropped
 }
+
+type DropHighest struct {
+	dropCount int
+}
+
+func (postAction DropHighest) String() string {
+	return fmt.Sprintf("dh%d", postAction.dropCount)
+}
+
+func (dhAction DropHighest) ApplyFilter(rolls []int) ([]int, []int) {
+	indices := make([]int, len(rolls))
+	for i := range indices {
+		indices[i] = i
+	}
+
+	slices.SortFunc[[]int](indices, func(a, b int) int {
+		return rolls[b] - rolls[a]
+	})
+
+	isDropped := make([]bool, len(rolls))
+	for _, indx := range indices[:dhAction.dropCount] {
+		isDropped[indx] = true
+	}
+
+	kept := make([]int, 0, len(rolls)-dhAction.dropCount)
+	dropped := make([]int, 0, dhAction.dropCount)
+
+	for i, roll := range rolls {
+		if isDropped[i] {
+			dropped = append(dropped, roll)
+		} else {
+			kept = append(kept, roll)
+		}
+	}
+
+	return kept, dropped
+}
