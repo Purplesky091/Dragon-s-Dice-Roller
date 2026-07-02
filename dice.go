@@ -14,7 +14,7 @@ const POST_ACTION_FLAG = "PostActionFlag"
 const POST_ACTION_COUNT = "PostActionCount"
 
 var diceRegex = regexp.MustCompile(
-	fmt.Sprintf(`^(?P<%s>\d+)?d(?P<%s>\d+)(?P<%s>kh|dl)?(?P<%s>\d+)?$`,
+	fmt.Sprintf(`^(?P<%s>\d+)?d(?P<%s>\d+)(?P<%s>kh|kl|dh|dl)?(?P<%s>\d+)?$`,
 		DICE_COUNT,
 		FACE_COUNT,
 		POST_ACTION_FLAG,
@@ -88,7 +88,10 @@ func NewDice(dice string) (Dice, error) {
 		return Dice{}, faceCountErr
 	}
 
-	postAction := getPostAction(matches[POST_ACTION_FLAG], matches[POST_ACTION_COUNT])
+	postAction, postActionErr := getPostAction(diceCount, matches[POST_ACTION_FLAG], matches[POST_ACTION_COUNT])
+	if postActionErr != nil {
+		return Dice{}, postActionErr
+	}
 
 	return Dice{count: diceCount, faces: faceCount, postAction: postAction}, nil
 }
@@ -149,31 +152,38 @@ func getFaceCount(faceCountStr string) (int, error) {
 	return faceCount, nil
 }
 
-func getPostAction(postApplyFlag string, postApplyCountStr string) PostAction {
+func getPostAction(diceCount int, postActionFlag string, postActionCountStr string) (PostAction, error) {
 	var postAction PostAction = nil
-	var postApplyCount int
+	var postActionCount int
 
-	if postApplyFlag == "" {
-		return nil
+	if postActionFlag == "" {
+		return nil, nil
 	}
 
-	slog.Info("PostApplyFlag set", "postApplyFlag", postApplyFlag)
-	if postApplyCountStr != "" {
-		postApplyCount, _ = strconv.Atoi(postApplyCountStr)
-		slog.Info("PostApplyCount set", "PostApplyCount", postApplyCount)
+	slog.Info("postActionFlag set", "postActionFlag", postActionFlag)
+	if postActionCountStr != "" {
+		postActionCount, _ = strconv.Atoi(postActionCountStr)
+		slog.Info("postActionCount set", "postActionCount", postActionCount)
 	} else {
-		postApplyCount = 1
-		slog.Info("No PostApplyCount set. Defaulting to 1")
+		postActionCount = 1
+		slog.Info("No postActionCount set. Defaulting to 1")
 	}
 
-	switch postApplyFlag {
+	if postActionCount > diceCount {
+		return nil, fmt.Errorf("Cannot keep/drop %d dice when there are only %d dice. You can only keep/drop %d or less dice", postActionCount, diceCount, diceCount)
+	}
+
+	switch postActionFlag {
 	case "kh":
-		postAction = KeepHighest{keepCount: postApplyCount}
+		postAction = KeepHighest{keepCount: postActionCount}
+	case "kl":
+		postAction = KeepLowest{keepCount: postActionCount}
+	case "dh":
+		postAction = DropHighest{dropCount: postActionCount}
 	case "dl":
-		postAction = DropLowest{dropCount: postApplyCount}
-	default:
-		postAction = nil
+		postAction = DropLowest{dropCount: postActionCount}
+
 	}
 
-	return postAction
+	return postAction, nil
 }
