@@ -48,6 +48,45 @@ func (khAction KeepHighest) ApplyFilter(rolls []int) ([]int, []int) {
 	return kept, dropped
 }
 
+type KeepLowest struct {
+	keepCount int
+}
+
+func (postAction KeepLowest) String() string {
+	return fmt.Sprintf("kl%d", postAction.keepCount)
+}
+
+func (klAction KeepLowest) ApplyFilter(rolls []int) ([]int, []int) {
+	indices := make([]int, len(rolls))
+	for i := range indices {
+		indices[i] = i
+	}
+
+	// Sort a slice of indices by their corresponding roll values (descending).
+	// This lets us rank rolls by value without reordering the original slice,
+	// so we can mark which positions are dropped while preserving insertion order.
+	slices.SortFunc(indices, func(a, b int) int {
+		return rolls[a] - rolls[b] // sort in descending order
+	})
+
+	isDropped := make([]bool, len(rolls))
+	for _, idx := range indices[klAction.keepCount:] {
+		isDropped[idx] = true
+	}
+
+	kept := make([]int, 0, klAction.keepCount)
+	dropped := make([]int, 0, len(rolls)-klAction.keepCount)
+	for i, roll := range rolls {
+		if isDropped[i] {
+			dropped = append(dropped, roll)
+		} else {
+			kept = append(kept, roll)
+		}
+	}
+
+	return kept, dropped
+}
+
 type DropLowest struct {
 	dropCount int
 }

@@ -170,7 +170,7 @@ func getPostAction(postApplyFlag string, postApplyCountStr string) PostAction {
 	case "kh":
 		postAction = KeepHighest{keepCount: postApplyCount}
 	case "kl":
-		slog.Info("Setting KeepLowest action")
+		postAction = KeepLowest{keepCount: postApplyCount}
 	case "dh":
 		slog.Info("Setting DropHighest action")
 	case "dl":
