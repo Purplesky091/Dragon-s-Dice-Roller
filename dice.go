@@ -14,7 +14,7 @@ const POST_ACTION_FLAG = "PostActionFlag"
 const POST_ACTION_COUNT = "PostActionCount"
 
 var diceRegex = regexp.MustCompile(
-	fmt.Sprintf(`^(?P<%s>\d+)?d(?P<%s>\d+)(?P<%s>kh|dl)?(?P<%s>\d+)?$`,
+	fmt.Sprintf(`^(?P<%s>\d+)?d(?P<%s>\d+)(?P<%s>kh|kl|dh|dl)?(?P<%s>\d+)?$`,
 		DICE_COUNT,
 		FACE_COUNT,
 		POST_ACTION_FLAG,
@@ -169,10 +169,13 @@ func getPostAction(postApplyFlag string, postApplyCountStr string) PostAction {
 	switch postApplyFlag {
 	case "kh":
 		postAction = KeepHighest{keepCount: postApplyCount}
+	case "kl":
+		slog.Info("Setting KeepLowest action")
+	case "dh":
+		slog.Info("Setting DropHighest action")
 	case "dl":
 		postAction = DropLowest{dropCount: postApplyCount}
-	default:
-		postAction = nil
+
 	}
 
 	return postAction
