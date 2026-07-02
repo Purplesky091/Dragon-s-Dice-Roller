@@ -8,7 +8,17 @@ import (
 	"strconv"
 )
 
-var diceRegex = regexp.MustCompile(`^(?P<DiceCount>\d+)?d(?P<FaceCount>\d+)(?P<PostApplyFlag>kh|dl)?(?P<PostApplyCount>\d+)?$`)
+const DICE_COUNT = "DiceCount"
+const FACE_COUNT = "FaceCount"
+const POST_ACTION_FLAG = "PostActionFlag"
+const POST_ACTION_COUNT = "PostActionCount"
+
+var diceRegex = regexp.MustCompile(
+	fmt.Sprintf(`^(?P<%s>\d+)?d(?P<%s>\d+)(?P<%s>kh|dl)?(?P<%s>\d+)?$`,
+		DICE_COUNT,
+		FACE_COUNT,
+		POST_ACTION_FLAG,
+		POST_ACTION_COUNT))
 
 const diceCountCap int = 1000
 const faceCap int = 1000
@@ -68,17 +78,17 @@ func NewDice(dice string) (Dice, error) {
 		return Dice{}, matchingErr
 	}
 
-	diceCount, diceCountErr := getDiceCount(matches["DiceCount"], dice)
+	diceCount, diceCountErr := getDiceCount(matches[DICE_COUNT], dice)
 	if diceCountErr != nil {
 		return Dice{}, diceCountErr
 	}
 
-	faceCount, faceCountErr := getFaceCount(matches["FaceCount"])
+	faceCount, faceCountErr := getFaceCount(matches[FACE_COUNT])
 	if faceCountErr != nil {
 		return Dice{}, faceCountErr
 	}
 
-	postAction := getPostAction(matches["PostApplyFlag"], matches["PostApplyCount"])
+	postAction := getPostAction(matches[POST_ACTION_FLAG], matches[POST_ACTION_COUNT])
 
 	return Dice{count: diceCount, faces: faceCount, postAction: postAction}, nil
 }
